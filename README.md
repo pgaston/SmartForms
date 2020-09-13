@@ -1,7 +1,7 @@
 # git
 
 git add -A
-git commit -a "new stuff"
+git commit -a -m "new stuff"
 git push
 
 # SmartForms

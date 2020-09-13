@@ -1,3 +1,9 @@
+# git
+
+git add -A
+git commit -a "new stuff"
+git push
+
 # SmartForms
 
 A set of tools to provide process support for the Enterprise. Provided are:

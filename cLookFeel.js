@@ -44,16 +44,19 @@ var avEmailForms = {}; // email addresses with form: {'name':formname,'form':for
 var bPreEmail = true; // true until the first email button is hit - every time form is opened!
 var bUserState; // User in control - false is requestor,true is fulfiller
 
-// E-mail addresses, for complex cases I tend to use a json table (built in Excel)
-var aToCC = "maintcapture@acme.com";
-var aToCorpECom = "corpecom@acme.com";
-var aToEBBEnrol = "ebbenrol@acme.com;";
+// E-mail addresses on error - actual email addresses in JSON table
 var aToError = "john.cho@acme.com";
 var aToNA = aToError;
 
 // Messages - both EN and FR
+var msgTabName = bEN
+  ? ["Service Needs tab", "Gather Information tab", "Implement Servicing tab"]
+  : [
+      "Onglet Besoins de service",
+      "Onglet Rassembler informations",
+      "Onglet Mettre en service",
+    ];
 var msgSubject = bEN ? "CM Maintenance - " : "Maintenance GT - ";
-var msgSubjectCCRequest = bEN ? "CC Maintenance/" : "CC Maintenance/";
 var msgBody = bEN
   ? "The Cash Management Products Maintenance Form is attached.\n\nPlease include all information in the form.  Any additional comments in this email will not be seen."
   : "Le formulaire de maintenance des produits de gestion de tresorerie est attache.\n\nVeuillez inclure toutes les informations dans le formulaire. Tous les commentaires supplementaires dans cet e-mail ne seront pas lus.";
@@ -66,7 +69,6 @@ var msgSubjectAppRequest = bEN
 var msgBodyAppRequest = bEN
   ? "Please review this request in the attached PDF and either approve or decline at the bottom of that form and continue to follow instructions on the form."
   : "Veuillez examiner la demande dans le PDF ci-joint et approuver ou refuser au bas de ce formulaire et continuer de suivre les instructions qui sont sur formulaire.";
-
 var msgNo = bEN ? "No" : "Non";
 var msgYes = bEN ? "Yes" : "Oui";
 var msgJanuary = bEN ? "January" : "Janvier";
@@ -146,7 +148,6 @@ function fGetField(aField, aSection) {
   return oField;
 }
 
-
 /***************************************************/
 /***** Document object referencing, short cuts *****/
 /***************************************************/
@@ -173,7 +174,6 @@ var oTab1Selection = fGetField("geCB", aTab1);
 var geDate = fGetField("geOverview.globalFormDate", aTab1);
 var geClientName = fGetField("geOverview.globalClientName", aTab1);
 var geClientSRF = fGetField("geOverview.globalClientSRF", aTab1);
-var geClientType = fGetField("geOverview.globalClientType", aTab1);
 var tfLoad = fGetField("sfLoad.tfLoad", aTab1);
 
 // Tab two (and three)
@@ -187,130 +187,6 @@ var oTab2ProcessingForms = fGetField(
   aTab2
 );
 var oTab2Overview = fGetField("Sect_OverviewInfo", aTab2Forms);
-var oTab2RBCx = fGetField("Sect_RBCx", aTab2Forms);
-var oTab3RBCx = fGetField("Sect_OverviewInfo.sfFromTab1.sfRBCx", aTab2Forms);
-
-var oCommSectAddress = fGetField("Sect_ChangeAddress", aTab2Forms);
-var oCommmSectContact = fGetField("Sect_Contact", aTab2Forms);
-var oCommmSectCancel = fGetField("Sect_RemoveServ", aTab2Forms);
-var oCommAddressServices = fGetField(
-  "Sect_ChangeAddress.Content.sfalloptions.sfServices",
-  aTab2Forms
-);
-var oCommContactServices = fGetField(
-  "Sect_Contact.sfalloptions.sfServices",
-  aTab2Forms
-);
-var oCommCancelServices = fGetField(
-  "Sect_RemoveServ.Content.sfServices",
-  aTab2Forms
-);
-var oCommAddressServicesRBCx = fGetField(
-  "Sect_ChangeAddress.Content.sfalloptions.sfServices.cb[0]",
-  aTab2Forms
-);
-var oCommContactServicesRBCx = fGetField(
-  "Sect_Contact.sfalloptions.sfServices.cb[0]",
-  aTab2Forms
-);
-var oCommCancelServicesRBCx = fGetField(
-  "Sect_RemoveServ.Content.sfServices.cb[0]",
-  aTab2Forms
-);
-var oCommCancelServicesRBCxSf = fGetField(
-  "Sect_RemoveServ.Content.sfServices.sf",
-  aTab2Forms
-); // The Services section
-var oCancelServicesTxtHeader = fGetField(
-  "Sect_RemoveServ.Content.sfServices.txtServices",
-  aTab2Forms
-);
-
-var oAddAcctsTbl = fGetField(
-  "Sect_AcctOwned.Content.sfAccountsTable.tblAccounts",
-  aTab2Forms
-);
-var oAddMLEAcctsTbl = fGetField(
-  "Sect_AcctNonOwned.Content.sfAccountsTable.tblAccounts",
-  aTab2Forms
-);
-var oAddNonSRFAcctsTbl = fGetField(
-  "Sect_AcctNonSRF.Content.sfAccountsTable.tblAccounts",
-  aTab2Forms
-);
-var oACHAcctsTbl = fGetField(
-  "Sect_ACHAccts.Content.sfAccountsTable.tblAccounts",
-  aTab2Forms
-);
-var oContactACHAcctsTbl = fGetField(
-  "Sect_Contact.Content.sfContact[4].sfACH.sfAccountsTable.tblAccounts",
-  aTab2Forms
-);
-var oContactNetworkGatewayTbl = fGetField(
-  "Sect_Contact.Content.sfContact[16].sfACH.sfAccountsTable.tblAccounts",
-  aTab2Forms
-);
-var oAdminTbl = fGetField(
-  "Sect_Admin.Content.sfAccountsTable.tblAccounts",
-  aTab2Forms
-);
-var oNonOwnedConfirm = fGetField("Sect_AcctNonOwned.Confirm", aTab2Forms);
-var aTab2OwnedAccountsTable =
-  aTab2 + "sfForms.Sect_AcctOwned.Content.sfAccountsTable.tblAccounts.Row[*]";
-var aTab2NonOwnedAccountsTable =
-  aTab2 +
-  "sfForms.Sect_AcctNonOwned.Content.sfAccountsTable.tblAccounts.Row[*]";
-
-var oACHDepositType = fGetField("Sect_ACHDirect.sf.rbYN", aTab2Forms);
-var oACHDepositICanApprove = fGetField(
-  "Sect_ACHDirect.Content.sfCommon.sfApproval.rb12",
-  aTab2Forms
-);
-var oACHDepositMeApprove = fGetField(
-  "Sect_ACHDirect.Content.sfCommon.sfGetApproval.sfForApprover.sfApprovedBy.rb12",
-  aTab2Forms
-);
-var oACHDepositApproverEmail = fGetField(
-  "Sect_ACHDirect.Content.sfCommon.sfGetApproval.sfGetApprover.approverEmail",
-  aTab2Forms
-);
-var oACHDepositApproverSection = fGetField(
-  "Sect_ACHDirect.Content.sfCommon.sfGetApproval.sfForApprover",
-  aTab2Forms
-);
-
-var oCC = fGetField("Sect_CorpCreditor.Content", aTab2Forms);
-var oCCCheckList = fGetField(
-  "Sect_CorpCreditor.Content.sfModifyProfile.sfFirst.sfChecklist",
-  aTab2Forms
-);
-var oCCFirst = fGetField(
-  "Sect_CorpCreditor.Content.sfModifyProfile.sfFirst",
-  aTab2Forms
-);
-
-// Debug
-var oRBCStatementsCB = fGetField(
-  "Sect_AcctNonSRF.Content.sfAccountsTable.tblAccounts.Row[0].Account.two.Services.sfDelAllServices.sfSvc[7].rbD",
-  aTab2Forms
-);
-
-var oEDIPaymentReceiver = fGetField(
-  "Sect_EDIPaymentReceiver.Content",
-  aTab2Forms
-);
-var oEDIPaymentOriginator = fGetField(
-  "Sect_EDIPaymentOriginator.Content",
-  aTab2Forms
-);
-var oCEPAS = fGetField("Sect_CEPAS.Content", aTab2Forms);
-
-var oTokensOrder = fGetField("Sect_Tokens.Content.sfcbOrder.cbBP", aTab2Forms);
-var oTokensRemove = fGetField(
-  "Sect_Tokens.Content.sfcbRemove.cbBP",
-  aTab2Forms
-);
-var oTokensMove = fGetField("Sect_Tokens.Content.sfcbMove.cbBP", aTab2Forms);
 
 // Tab three
 var oTab3ReqInstructions = fGetField("ReqInstructions", aTab2);
@@ -320,6 +196,37 @@ var oTab3btnSubmit = fGetField(
   aTab2
 );
 var oTabListForms = fGetField("ProcInstructions.goInstr.txtForms", aTab2);
+
+// Service is a combination of it's checkbox on tab 1 and the section it uses on tab 2
+var vaServices = [
+  {
+    product: "Lockbox",
+    email: "lockboxProcessing@acme.com",
+    cb: fGetField(
+      "geCB.grp.CollectTwistie.HideShowSection.tbl.row0.sf.cb",
+      aTab1
+    ),
+    form: fGetField("Sect_RPSALBLockboxEDI", aTab2Forms),
+  },
+  {
+    product: "Payment Receiver",
+    email: "genlMaintenance@acme.com",
+    cb: fGetField(
+      "geCB.grp.CollectTwistie.HideShowSection.tbl.row1.sf.cb",
+      aTab1
+    ),
+    form: fGetField("Sect_EDIPaymentReceiver", aTab2Forms),
+  },
+  {
+    product: "Cheque Issuance",
+    email: "genlMaintenance@acme.com",
+    cb: fGetField(
+      "geCB.grp.PaymentTwistie.HideShowSection.tbl.row0.sf.cb",
+      aTab1
+    ),
+    form: fGetField("Sect_ChequeIssuance", aTab2Forms),
+  },
+];
 
 /********************************************************/
 /***** Utilities (take two), Initialization *************/
@@ -345,7 +252,7 @@ var oTabListForms = fGetField("ProcInstructions.goInstr.txtForms", aTab2);
 var kChunks = 32;
 var kSize = 14000; // just in case it grows    (32*12K = 384, *15 = 480)
 function splitOutBigString(a) {
-  fLog("splitOutBigString - length: " + a.length);
+  //fLog("splitOutBigString - length: " + a.length);
   aSomBase = "form1.FirstPage.Header.sf.tfSt[";
   for (var i = 0; i < kChunks; ++i) {
     // clear out
@@ -380,25 +287,17 @@ function fResetToFirstTime(o) {
 
 // first time initialization only!
 function fHideTab2Forms() {
-
-  fLog("fHideTab2Forms ignored");
-  return;
-
+  // Hide all tab2 sub forms - turned on/off as we go to tab 2
   fDisplay(oTab2NoneSelected, false); // 'Please go back to tab one and select one or more services...
   fDisplay(oTab2OnToNext, false);
   fDisplay(oTab2Requestor, false);
   fDisplay(oTab2Overview, false);
-  fDisplay(oTab2RBCx, false); // RBCx - asking for site information
-  fDisplay(oTab3RBCx, false);
 
-  // Check each section / row of services
   for (i = 0; i < vaServices.length; i++) {
-    var aServiceArea = vaServices[i];
-    var vRows = aServiceArea["rows"];
-    for (j = 0; j < vRows.length; j++) {
-      var aRow = vRows[j];
-      fDisplay(aRow.form, false);
-    }
+    // Hide the section for each service
+    var dService = vaServices[i];
+    var oForm = dService["form"];
+    fDisplay(oForm, false);
   }
 }
 
@@ -409,7 +308,6 @@ function fFirstInitialization() {
   liStartLoad = new Date().getTime(); // milliseconds
   fLog("Language " + (bEN ? "EN" : "FR"));
 
-  //fInitServiceDescription(); // init the definitional tables
   var oRightNow = new Date(); // and then normalize to start of day
   oToday = new Date(
     oRightNow.getFullYear(),
@@ -450,7 +348,6 @@ function fFirstInitialization() {
 }
 
 function fFinalInitialization() {
-  fInitJointOwnedTable();
   bInitializing = false;
   bFirstInitializing = false;
 
@@ -471,1395 +368,9 @@ function fPreSaveDoc() {
   fLog("fPreSaveDoc");
 }
 
-
 /**********************************/
 /***** Business Logic *************/
 /**********************************/
-
-function fShowAdmin(oAdminRow) {
-  var oAction = oAdminRow.Action.takeAction;
-  var oAdd = oAdminRow.Account.sf.sfAdd;
-  var oExisting = oAdminRow.Account.sf.Existing;
-  var oDelete = oAdminRow.Account.sf.txtDelSAName;
-  var oModify = oAdminRow.Account.sf.Modify;
-  var oBasic = oAdminRow.Account.sf.BasicInfo;
-  var oAccess = oAdminRow.Account.sfAccess;
-
-  assert(oAction != null, "fShowAdmin - oAction was null ");
-  assert(oAdd != null, "fShowAdmin - oAdd was null ");
-  assert(oExisting != null, "fShowAdmin - oExisting was null ");
-  assert(oDelete != null, "fShowAdmin - oDelete was null ");
-  assert(oModify != null, "fShowAdmin - oModify was null ");
-  assert(oBasic != null, "fShowAdmin - oBasic was null ");
-  assert(oAccess != null, "fShowAdmin - oAccess was null ");
-
-  var iAction = oAction.rawValue; // add/delete/modify
-
-  fDisplay(oAdd, iAction != 3); // add or delete
-  fDisplay(oExisting, iAction != 1); // delete or modify
-  fDisplay(oDelete, iAction == 2); // delete
-  fDisplay(oModify, iAction == 3); // modify
-  fQkDisplay(oBasic, iAction != 2); // add or modify
-  fQkDisplay(oAccess, iAction != 2); // not delete
-  fDisplay(oBasic.sfNo, oBasic.rbAll.rawValue == 2);
-  fDisplay(oBasic.sfYes, oBasic.rbAll.rawValue == 1);
-}
-
-/************************/
-/***** User Actions *****/
-/************************/
-
-function fClickKLinkGlossary() {
-  if (bEN) {
-    app.launchURL(
-      "http://rbcbanking.fg.acme.com/productsservices/cid-264072.html",
-      true
-    );
-    // was        app.launchURL("http://s3w03201.fg.acme.com/analytics/saw.dll?Dashboard&_scid=ZcEb0yjobco",true);
-  } else {
-    app.launchURL(
-      "http://rbcbanking.fg.acme.com/productsservices-fr/cid-266476.html",
-      true
-    );
-    // was        app.launchURL("http://s3w03201.fg.acme.com/analytics/saw.dll?Dashboard&_scid=ZcEb0yjobco",true);
-  }
-}
-
-function fClickKLinkTransRisk() {
-  if (bEN) {
-    app.launchURL(
-      "http://rbcbanking.fg.acme.com/productsservices/file-563113.pdf",
-      true
-    );
-  } else {
-    app.launchURL(
-      "http://rbcbanking.fg.acme.com/productsservices-fr/file-563116.pdf",
-      true
-    );
-  }
-}
-
-function fClickKLinkO21() {
-  if (bEN) {
-    app.launchURL(
-      "http://ppl3-reader.fg.acme.com/GetDocument.aspx?Type=Folio&id=2&ds=1781&File=http%3a%2f%2fppl3-reader.fg.acme.com%2fcs000%2fO21RBCExpressExpressWirePayments%2fFolio%2fGS91_PF1781_Folio_English.doc",
-      true
-    );
-  } else {
-    app.launchURL(
-      "http://ppl3-reader.fg.acme.com/GetDocument.aspx?Type=Folio&id=4&ds=1781&File=http%3a%2f%2fppl3-reader.fg.acme.com%2fcs000%2fO21RBCExpressExpressWirePayments%2fFolio%2fGS91_PF1781_Folio_French.doc",
-      true
-    );
-  }
-}
-
-function fClickKLinkCRPG5() {
-  if (bEN) {
-    app.launchURL(
-      "http://ppl3-reader.fg.acme.com/GetDocument.aspx?Type=Folio&id=5&ds=648&File=http%3a%2f%2fppl3-reader.fg.acme.com%2fcs000%2fCRPG5ProductGuidelinesCashManagement%2fFolio%2fGS91_PF648_Folio_English.doc",
-      true
-    );
-  } else {
-    app.launchURL(
-      "http://ppl3-reader.fg.acme.com/GetDocument.aspx?Type=Folio&id=4&ds=648&File=http%3a%2f%2fppl3-reader.fg.acme.com%2fcs000%2fCRPG5ProductGuidelinesCashManagement%2fFolio%2fGS91_PF648_Folio_French.doc",
-      true
-    );
-  }
-}
-
-function fClickKLinkNonSRF() {
-  if (bEN) {
-    app.launchURL(
-      "http://rbcnet.fg.acme.com/cb/operations/bsc/cid-306187.html",
-      true
-    );
-  } else {
-    app.launchURL(
-      "http://rbcnet.fg.acme.com/cashmanagement_fr/file-718750.pdf",
-      true
-    );
-  }
-}
-
-function fClickKLinkClearingFolio() {
-  if (bEN) {
-    // Cash Management Product Enrolment Form Glossary
-    app.launchURL(
-      "http://rbcbanking.fg.acme.com/productsservices/cid-398201.html",
-      true
-    );
-  } else {
-    // Gestion de trésorerie Produit Formulaire d'inscription Glossaire
-    app.launchURL(
-      "http://rbcbanking.fg.acme.com/productsservices-fr/cid-398202.html",
-      true
-    );
-  }
-}
-
-// *********
-// not used
-function fClickKLinkFeedback() {
-  if (bEN) {
-    app.launchURL(
-      "http://rbcnet.fg.acme.com/cashmanagement/cid-83318.html",
-      true
-    );
-  } else {
-    app.launchURL(
-      "http://rbcnet.fg.acme.com/cashmanagement_fr/cid-83608.html",
-      true
-    );
-  }
-}
-
-function fClickKLinkO14() {
-  if (bEN) {
-    app.launchURL(
-      "http://ppl3-reader.fg.acme.com/GetDocument.aspx?Type=Policy&id=1&ds=3600",
-      true
-    );
-  } else {
-    app.launchURL(
-      "http://ppl3-reader.fg.acme.com/GetDocument.aspx?Type=Policy&id=2&ds=3600",
-      true
-    );
-  }
-}
-
-function fACHCrossBorder() {
-  if (bEN) {
-    app.launchURL("http://rbcnet.fg.acme.com/ACH/file-828674.pdf", true);
-  } else {
-    app.launchURL(
-      "http://rbcnet.fg.acme.com/transfrontieres-ACH/file-828676.pdf",
-      true
-    );
-  }
-}
-
-
-
-
-
-
-
-  // Must repeat this as things may or may not have changed since fSetClientSegment ran
-  if (bTab2) {
-    fFormMakeReadWrite(oCommmSectContact);
-  } else {
-    fFormMakeReadOnly(oCommmSectContact);
-  }
-}
-
-function fCancelInfoShows(bTab2) {
-  //Show Reason Field in Cancel Servies Section when service checked
-  var bAny = false;
-  // Loop through all service checkboxes
-  for (var i = 0; i < vaCommonSvcs.length; i++) {
-    var oCB = oCommonCB(kaCommonCancelForm, i);
-    if (fShowing(oCB)) {
-      if (oCB.rawValue == 1)
-        // active and checked - show all contacts for that section below
-        bAny = true;
-    }
-  }
-  fShowHideCancelSubSection(bAny);
-
-  if (bTab2) {
-    fFormMakeReadWrite(oCommmSectCancel);
-  } else {
-    fFormMakeReadOnly(oCommmSectCancel);
-  }
-}
-
-function fGetClientType() {
-  var iSegment = getRawElse(geClientType, 0) - 1;
-  return iSegment;
-}
-
-// Next two wrap during the setting up of the form for emailing
-function fHideAllCommonSubSections() {
-  // loop through top level checkboxes - hide/show those that apply
-
-  for (var i = 0; i < vaCommonSvcs.length; i++) {
-    // Hide all the checkboxes
-    var oCB = oCommonCB(kaCommonAddressForm, i);
-    fHide(oCB);
-    oCB = oCommonCB(kaCommonContactForm, i);
-    fHide(oCB);
-    oCB = oCommonCB(kaCommonCancelForm, i);
-    fHide(oCB);
-  }
-
-  fHide(oCancelServicesTxtHeader); // The text 'Services' - show if any checkboxes set below
-
-  // Now the subsections - hide'm all
-  fShowHideAddressSubSection(false, false);
-  fShowHideCancelSubSection(false);
-  for (var i = 0; i < voContactShows.length; i++) {
-    // Contact sub sections
-    var oCS = voContactShows[i];
-    fHide(oCS);
-  }
-}
-
-// was fShowCommons
-function fShowCommonSubSections(aEmail) {
-  // for this email, only show what applies
-  // loop through vaCommonActive - hide/show those that apply
-  var iSegment = getRawElse(geClientType, 0) - 1;
-  var bAny = false;
-  for (var i = 0; i < vaCommonSvcs.length; i++) {
-    var oSvc = vaCommonSvcs[i];
-    var vRouting = oSvc.routing;
-    var vCRouting = oSvc.contactRouting;
-
-    var aRouteEMail = vRouting[iSegment];
-    var aCRouteEMail = vCRouting[iSegment];
-
-    if (aEmail == aRouteEMail) {
-      // Address, Cancel at same time
-      // only show if this CB is on...
-      var oCB = oCommonCB(kaCommonAddressForm, i);
-      if (fBool(oCB)) {
-        fShow(oCB);
-        fShow(oCommonCB(kaCommonAddressForm, i));
-        fShowHideAddressSubSection(true, true);
-      }
-
-      var oCB = oCommonCB(kaCommonCancelForm, i);
-      if (fBool(oCB)) {
-        fShow(oCB);
-        fShow(oCommonCB(kaCommonCancelForm, i));
-        fShowHideCancelSubSection(true);
-        fShow(oCancelServicesTxtHeader);
-      }
-    }
-
-    if (aEmail == aCRouteEMail) {
-      // Contact
-      var oCB = oCommonCB(kaCommonContactForm, i);
-      if (fBool(oCB)) {
-        fShow(oCB);
-
-        for (var j = 0; j < oSvc.active.length; j++) {
-          // All Contact sub sections for this email
-          var bShow = oSvc.active[j] == 1;
-          if (bShow) {
-            var oCS = voContactShows[j];
-            fShow(oCS);
-          }
-        }
-      }
-    }
-  }
-}
-
-function fShowAllCommons() {
-  for (var i = 0; i < vaCommonSvcs.length; i++) {
-    var oSvc = vaCommonSvcs[i];
-
-    var oCB = oCommonCB(kaCommonAddressForm, i);
-    fDisplay(oCB, oSvc.commonOn == 1);
-    oCB = oCommonCB(kaCommonCancelForm, i);
-    fDisplay(oCB, oSvc.commonOn == 1);
-    oCB = oCommonCB(kaCommonContactForm, i);
-    fDisplay(oCB, oSvc.contactOn == 1);
-  }
-
-  fAddressInfoShows(false);
-  fContactInfoShows(false); // Get the contact areas to show
-  fCancelInfoShows(false);
-}
-
-
-
-// SF Table helper functions
-function fAddSfRow(oSfTable) {
-  oSfRow = oSfTable.sfRow;
-  oSfRow.instanceManager.addInstance(1);
-  fixSfTable(oSfTable);
-
-  var oBaseRow = oSfTable.nodes.item(1); // ignore instanceManager
-  var oNewRow = oSfTable.nodes.item(oSfTable.nodes.length - 1); // last one added
-
-  bFirstInitializing = true;
-  oNewRow.execInitialize();
-  bFirstInitializing = false;
-
-  fMakeNewRowValidate(oBaseRow, oNewRow);
-  splitOutBigString(stringify(vaFldTest)); // and save for next time
-}
-
-function fixSfTable(oSfTable) {
-  // accessibility
-  oSfRow = oSfTable.sfRow;
-  aBaseSOM = oSfRow.somExpression;
-  fShowAdmin.takeAction;
-  var oAdd = oSfAdminRow.sf.sf.sfAdd;
-  var oExisting = oSfAdminRow.sf.sf.Existing;
-  var oDelete = oSfAdminRow.sf.sf.txtDelSAName;
-  var oModify = oSfAdminRow.sf.sf.Modify;
-  var oBasic = oSfAdminRow.sf.sf.BasicInfo;
-  var oAccess = oSfAdminRow.sf.sf.sfAccess;
-
-  assert(oAction != null, "fShowAdmin - oAction was null ");
-  assert(oAdd != null, "fShowAdmin - oAdd was null ");
-  assert(oExisting != null, "fShowAdmin - oExisting was null ");
-  assert(oDelete != null, "fShowAdmin - oDelete was null ");
-  assert(oModify != null, "fShowAdmin - oModify was null ");
-  assert(oBasic != null, "fShowAdmin - oBasic was null ");
-  assert(oAccess != null, "fShowAdmin - oAccess was null ");
-
-  var iAction = oAction.rawValue; // add/delete/modify
-
-  fDisplay(oAdd, iAction != 3); // add or delete
-  fDisplay(oExisting, iAction != 1); // delete or modify
-  fDisplay(oDelete, iAction == 2); // delete
-  fDisplay(oModify, iAction == 3); // modify
-  fQkDisplay(oBasic, iAction != 2); // add or modify
-  fQkDisplay(oAccess, iAction != 2); // not delete
-  fDisplay(oBasic.sfNo, oBasic.rbAll.rawValue == 2);
-  fDisplay(oBasic.sfYes, oBasic.rbAll.rawValue == 1);
-}
-
-function fChangedCommonCancelRBCx(oServices) {
-  var iServices = parseInt(oServices.rbSelServices.rawValue);
-  var oAllServices = oServices.Services.sfRBCXServices;
-  var oDelAllmsg = oServices.Services.sfServices.delAll;
-  var oDelCoremsg = oServices.Services.sfServices.delCore;
-  assert(oDelAllmsg != null, "fChangedCommonCancelRBCx - oDelAllmsg was null ");
-  assert(
-    oDelCoremsg != null,
-    "fChangedCommonCancelRBCx - oDelCoremsg was null "
-  );
-
-  fHide(oDelAllmsg);
-  fHide(oDelCoremsg);
-  fHideServices(oAllServices);
-  switch (iServices) {
-    case 1: // all services
-      fResetServices(oAllServices);
-      fCheckAllServices(oAllServices, true);
-      break;
-    case 2: // core services - Balance Reporting, RBC Statements, Account Images, Stop Payments, Account Transfers, and Bill Payments
-      fCheckAllServices(oAllServices, false);
-      fResetAServiceSet(oAllServices, 0, true, true); // Balance Reporting
-      fResetAServiceSet(oAllServices, 7, true, true); // Statements
-      fResetAServiceSet(oAllServices, 9, true, true); // Account Imaging
-      fResetAServiceSet(oAllServices, 3, true, true); // Stop Payments
-      fResetAServiceSet(oAllServices, 1, true, true); // Account Transfers
-      fResetAServiceSet(oAllServices, 2, true, true); // Bill Payments
-      break;
-    case 3: // select services
-      fResetServices(oAllServices);
-      fCheckAllServices(oAllServices, false);
-      break;
-    default:
-    // okay, no default set...
-  }
-  fCancelACHService(oServices);
-}
-
-function getCancelServiceCB(oServices, i) {
-  var aObj =
-    oServices.Services.sfRBCXServices.somExpression + ".sfSvc[" + i + "]";
-  var osfSvc = resolveNode(aObj);
-  var oCB = osfSvc.cb;
-  return oCB;
-}
-
-function fCancelACHService(oServices) {
-  var iServices = parseInt(oServices.rbSelServices.rawValue);
-  var oDelAllsF = oServices.Services.sfServices.sfDelGSANs;
-  assert(oDelAllsF != null, "fCancelACHService - oDelAllsF was null ");
-  fHide(oDelAllsF);
-
-  var oCB1 = getCancelServiceCB(oServices, 10);
-  var oCB2 = getCancelServiceCB(oServices, 11);
-  assert(oCB1 != null, "fCancelACHService - oCB1 was null ");
-  assert(oCB2 != null, "fCancelACHService - oCB2 was null ");
-
-  var bSet = oCB1.rawValue == 1 || oCB2.rawValue == 1;
-  fDisplay(oDelAllsF, bSet);
-
-  oDelAllInterac = oServices.Services.sfServices.delInterac;
-  oCBInterac = getCancelServiceCB(oServices, 12);
-  fDisplay(oDelAllInterac, oCBInterac.rawValue == 1);
-}
-
-// Go to 'All Services'
-function fChangedShowAccount(oAccountRow, bOwned, bMLE) {
-  var oRBServices = oAccountRow.Account.two.Add;
-  assert(oRBServices != null, "fChangedShowAccount - oRBServices was null ");
-
-  oRBServices.rawValue = 3;
-  fShowAccount(oAccountRow, bOwned, bMLE);
-}
-
-// Called to make sure this is appropriately showing
-function fShowAccount(oAccountRow, bOwned, bMLE) {
-  var bNonSRF = !bOwned && !bMLE;
-  // NON SRF
-  // ACBS Loan, they shouldn't be able to see Account Transfers,
-  // Credit Card, they also shouldn't be able to see Account Transfers
-  var bPrivateBanking = geClientType.rawValue == 3;
-
-  var oAction = oAccountRow.Action.takeAction;
-  var oAcctType = oAccountRow.Account.one.AcctType;
-  var oBDArb = oAccountRow.Account.one.AcctType.BDA;
-  var oNISStype = oAccountRow.Account.one.AcctType.NISS;
-  var oRBIStype = oAccountRow.Account.one.AcctType.RBIS;
-  var oTransit = oAccountRow.Account.one.TransitNo;
-  var oAcct = oAccountRow.Account.one.AccountNo;
-  var oCurrency = oAccountRow.Account.currency;
-  var oCCMsg = oAccountRow.Account.sfCCMessage;
-  var oRBServices = oAccountRow.Account.two.Add;
-
-  assert(oAction != null, "fShowAccount - oAction was null ");
-  assert(oAcctType != null, "fShowAccount - oAcctType was null ");
-  assert(oBDArb != null, "fShowAccount - oBDArb was null ");
-  assert(oNISStype != null, "fShowAccount - oNISStype was null ");
-  assert(oRBIStype != null, "fShowAccount - oRBIStype was null ");
-  assert(oTransit != null, "fShowAccount - oTransit was null ");
-  assert(oAcct != null, "fShowAccount - oAcct was null ");
-  assert(oCCMsg != null, "fShowAccount - oCCMsg was null ");
-  assert(oCurrency != null, "fShowAccount - oCurrency was null ");
-  assert(oRBServices != null, "fShowAccount - oRBServices was null ");
-
-  var oAddAllServices = oAccountRow.Account.two.Services.sfAddAllServices;
-  var oDelAllServices = oAccountRow.Account.two.Services.sfDelAllServices; // includes question on delete/delete permanently
-  assert(oAddAllServices != null, "fShowAccount - oAddAllServices was null ");
-  assert(oDelAllServices != null, "fShowAccount - oDelAllServices was null ");
-
-  var oDeletesMsg = oAccountRow.Account.two.Services.delServices;
-  var oDeletemsg = oAccountRow.Account.two.Services.delServices.delTxt;
-  var oDelAllmsg = oAccountRow.Account.two.Services.delServices.delAll;
-  var oDelCoremsg = oAccountRow.Account.two.Services.delServices.delCore;
-  assert(oDeletesMsg != null, "fShowAccount - oDeletesMsg was null ");
-  assert(oDeletemsg != null, "fShowAccount - oDeletemsg was null ");
-  assert(oDelAllmsg != null, "fShowAccount - oDelAllmsg was null ");
-  assert(oDelCoremsg != null, "fShowAccount - oDelCoremsg was null ");
-
-  var oHiInterest = oAccountRow.Account.two.Services.HI;
-  assert(oHiInterest != null, "fShowAccount - oHiInterest was null ");
-
-  var oSecTwo = oAccountRow.Account.two;
-  var oSecThree = oAccountRow.Account.three;
-  assert(oSecTwo != null, "fShowAccount - oSecTwo was null ");
-  assert(oSecThree != null, "fShowAccount - oSecThree was null ");
-
-  var bAdd = oAction.rawValue == 1;
-
-  // Defaults/clearly set,i.e.,the majority...
-  fQkDisplay(oTransit, true); // majority
-  fDisplay(oHiInterest, false);
-  fHide(oCCMsg);
-  fDisplay(oRBServices, false);
-  fHideServices(oAddAllServices);
-  fHideServices(oDelAllServices);
-  fHideShow(oDeletesMsg, !bAdd);
-  fHide(oDelAllmsg);
-  fHide(oDelCoremsg);
-
-  // Private Banking
-  fHideShow(oNISStype, bPrivateBanking);
-  fHideShow(oRBIStype, bPrivateBanking);
-
-  //fDisplay(oSecTwo,!bPrivateBanking);       // 190505 - PB like all else
-  fDisplay(oSecTwo, true);
-
-  fDisplay(oSecThree, bPrivateBanking && bAdd);
-
-  oBDArb.caption.value.resolveNode("#text").value = bPrivateBanking
-    ? "BDA / PDA"
-    : "BDA";
-
-  var oAllServices = bAdd ? oAddAllServices : oDelAllServices;
-
-  //change acct no to acct no LOOK HERE XXXXXXXXXXXXXXXXXXXXXX
-
-  oAcct.caption.value.text = aAcctNo;
-
-  // Account Type
-  switch (oAcctType.rawValue) {
-    case "1": // BDA - Transit 5,Acct 7
-      fDisplay(oCurrency, false);
-      // 171004 - change the showing of services - essentially show all
-      //        if (!bPrivateBanking) {     // 190114 - removed 190505
-      fDisplay(oRBServices, true);
-      fDisplay(oHiInterest, bAdd);
-
-      //            if (bAdd) {
-      fResetServices(oAllServices);
-      switch (Number(oRBServices.rawValue)) {
-        case 1: // all services - check all, make read-only
-          fSetAddServicesValue(oAllServices, true);
-          break;
-        case 2: // all services
-          fSetAddServicesValue(oAllServices, false);
-
-          // Core services
-          fSetAddServiceValue(oAllServices, 0, true); // Balance Reporting
-          fSetAddServiceValue(oAllServices, 1, true); // Account Transfers      - 190422
-          fSetAddServiceValue(oAllServices, 2, true); // Bill Payments
-          fSetAddServiceValue(oAllServices, 3, true); // Stop Payments
-          fSetAddServiceValue(oAllServices, 7, true); // RBC Statements
-          fSetAddServiceValue(oAllServices, 9, true); // Account Images
-          break;
-        case 3: // all services
-          break;
-      }
-      fHideAService(oAllServices, 10);
-      //       }
-      break;
-    case "2": // OLBB - now ACBS - Transit 5,Acct 10 - changed to 11,130618    - "ACBS Loan"
-      //    if (!bPrivateBanking) {     // 190114 - removed 190505
-      fResetAService(oAllServices, 0); // Balance Reporting,on
-      fHideShow(oDeletemsg, !bAdd);
-      //    }
-      //if (!bNonSRF)                     // for all
-      //fResetAService(oAllServices,1);      // Account Transfers,off
-      fDisplay(oCurrency, true);
-      break;
-    case "3": // OLMS, now Bus. Loan - Transit 5,Acct 10 - changed to 11,130618
-      //change acct no to loan no LOOK HERE XXXXXXXXXXXXXXXXXXXXXX
-
-      oAcct.caption.value.text = aLoanNo;
-
-      //    if (!bPrivateBanking) {     // 190114 - removed 190505
-      fResetAService(oAllServices, 0); // Balance Reporting,on
-      if (bOwned && !bNonSRF && !bMLE) fResetAService(oAllServices, 1); // Account Transfers,on     190422
-
-      if (!bNonSRF) fResetAService(oAllServices, 7); // RBC Statements,on     200821
-
-      fHideShow(oDeletemsg, !bAdd);
-      //    }
-      fDisplay(oCurrency, true);
-      break;
-    case "4": // GIC - Transit blank,Acct digits/non-blank
-      fDisplay(oCurrency, false);
-      fDisplay(oTransit, false);
-      //      if (!bPrivateBanking) {     // 190114 - removed 190505
-      fResetAService(oAllServices, 0); // Balance Reporting,on
-      //    fResetAService(oAllServices,1);      // Account Transfers,on     181112
-      fHideShow(oDeletemsg, !bAdd);
-      //      }
-      break;
-    case "5": // Credit Card - Transit blank,Acct
-      fDisplay(oCurrency, false);
-      fDisplay(oTransit, false);
-      //    if (!bPrivateBanking) {     // 190114
-      fResetAService(oAllServices, 0); // Balance Reporting,on
-
-      // 3/16/19 - Our Maintenance team indicated that for the RBC Express Services – Non-Owned (MLE)Account,
-      // When they select Add Account and the Account type is Credit Card , the Service (Account Transfers) should not be available
-      // turn on only for bOwned, nonSRF, nonMLE accounts
-      if (bOwned && !bNonSRF && !bMLE)
-        //if (!bNonSRF)
-        fResetAService(oAllServices, 1); // Account Transfers,off
-
-      fResetAService(oAllServices, 7); // statements,off
-      // fResetAService(oAllServices, 10);      // Paper Stmt Off,off   removed 190422
-      fHideShow(oDeletemsg, !bAdd);
-      //     }
-      fShow(oCCMsg);
-      break;
-    case "6": // NISS (Money Market) - Transit blank,Acct 10
-      fDisplay(oSecTwo, false); // no Services  190505
-
-      fDisplay(oCurrency, false);
-      fDisplay(oTransit, false);
-      break;
-    case "7": // RBIS (RRSP,RESP,TFSA,RRIF,Mutual Fund) - Transit blank,Acct 10 --- TBD
-      fDisplay(oSecTwo, false); // no Services  190505
-
-      fDisplay(oCurrency, false);
-      fDisplay(oTransit, false);
-      break;
-  }
-
-  fDisplay(oNonOwnedConfirm, bMLE && bNeedAttest());
-}
-
-// NOT NEEDED ... ????
-function fChangedShowNonSRFAccount(oAccountRow) {
-  fLog("XXXX WHO IS CALLING fChangedShowNonSRFAccount? XXX");
-  /*
-    var oRBServices = oAccountRow.Account.two.Add;
-    assert(oRBServices != null, "fChangedShowAccount - oRBServices was null ");
-
-    oRBServices.rawValue = 3;
-    fShowAccount(oAccountRow,false,false);
-    */
-}
-
-function fShowNonSRFAccount(oAccountRow) {
-  // only change is services shown based on All/Core/Select
-  var bPrivateBanking = Number(geClientType.rawValue) == 3;
-
-  // 171004 - make act (like a subset) of owned, non-owned(MLE)
-  var oAction = oAccountRow.Action.takeAction;
-  assert(oAction != null, "fShowAccount - oAction was null ");
-
-  var oRBServices = oAccountRow.Account.two.Add;
-  var oAllServices = oAccountRow.Account.two.Services;
-  assert(oRBServices != null, "fShowAccount - oRBServices was null ");
-  assert(oAllServices != null, "fShowAccount - oAddAllServices was null ");
-
-  var oAddAllServices = oAccountRow.Account.two.Services.sfAddAllServices;
-  var oDelAllServices = oAccountRow.Account.two.Services.sfDelAllServices; // includes question on delete/delete permanently
-  assert(oAddAllServices != null, "fShowAccount - oAddAllServices was null ");
-  assert(oDelAllServices != null, "fShowAccount - oDelAllServices was null ");
-
-  var oDeletesMsg = oAccountRow.Account.two.Services.delServices;
-  var oDeletemsg = oAccountRow.Account.two.Services.delServices.delTxt;
-  var oDelAllmsg = oAccountRow.Account.two.Services.delServices.delAll;
-  var oDelCoremsg = oAccountRow.Account.two.Services.delServices.delCore;
-  assert(oDeletesMsg != null, "fShowAccount - oDeletesMsg was null ");
-  assert(oDeletemsg != null, "fShowAccount - oDeletemsg was null ");
-  assert(oDelAllmsg != null, "fShowAccount - oDelAllmsg was null ");
-  assert(oDelCoremsg != null, "fShowAccount - oDelCoremsg was null ");
-
-  var oSecTwo = oAccountRow.Account.two;
-  assert(oSecTwo != null, "fShowAccount - oSecTwo was null ");
-
-  var bAdd = Number(oAction.rawValue) == 1;
-  var iServices = Number(oRBServices.rawValue);
-
-  fDisplay(oSecTwo, !bPrivateBanking);
-
-  // Defaults/clearly set,i.e.,the majority...
-  fHideShow(oDeletesMsg, !bAdd);
-  fHide(oDelAllmsg);
-  fHide(oDelCoremsg);
-
-  if (bAdd) {
-    fHideServices(oDelAllServices);
-    fResetServices(oAddAllServices);
-
-    switch (iServices) {
-      case 1: // all services - check all, make read-only
-        fSetAddServicesValue(oAddAllServices, true);
-        break;
-      case 2: // all services
-        fSetAddServicesValue(oAddAllServices, false);
-
-        // Core services
-        fSetAddServiceValue(oAddAllServices, 0, true); // Balance Reporting
-        fSetAddServiceValue(oAddAllServices, 3, true); // Stop Payments
-        fSetAddServiceValue(oAddAllServices, 7, true); // RBC Statements
-        fSetAddServiceValue(oAddAllServices, 9, true); // Account Images
-        break;
-      case 3: // all services
-        break;
-    }
-
-    fHideAService(oAddAllServices, 1); // no Acct Transfers
-    fHideAService(oAddAllServices, 2); // no Bill Payments
-    fHideAService(oAddAllServices, 5); // no Wire Payments
-    fHideAService(oAddAllServices, 8); // no Cheque Pro
-  } else {
-    // Deletion
-    fHideServices(oDelAllServices);
-    fHideServices(oAddAllServices);
-
-    switch (iServices) {
-      case 1: // all services
-        fResetAServiceSet(oDelAllServices, 7, true, true); // Statements
-        fResetAServiceSet(oDelAllServices, 9, true, true); // Account Imaging
-        break;
-      case 2: // core services
-        fResetAServiceSet(oDelAllServices, 7, true, true); // Statements
-        fResetAServiceSet(oDelAllServices, 9, true, true); // Account Imaging
-        fShow(oDelCoremsg);
-        fShow(oDeletemsg);
-        break;
-      case 3: // select services
-        fResetServices(oDelAllServices);
-        break;
-    }
-
-    fHideAService(oDelAllServices, 1); // no Acct Transfers
-    fHideAService(oDelAllServices, 2); // no Bill Payments
-    fHideAService(oDelAllServices, 5); // no Wire Payments
-    fHideAService(oDelAllServices, 8); // no Cheque Pro
-  }
-}
-
-function fCopyACHContactsPrevRow(oAccountRow) {
-  // here as we need some of the stuff from fShowContactACHAccount
-  // find the previous row by finding this row
-  var iRow = oAccountRow.index;
-  if (iRow < 1) return;
-  assert(
-    iRow >= 1,
-    "need to be second or greater row - fCopyACHContactsPrevRow"
-  );
-
-  var oTable = oAccountRow.parent; // make generic so can handle Network Gateway table
-  oRows = fGetAllTableRows(oTable.somExpression);
-  var oPrevRow = oRows.item(iRow - 1);
-  assert(oPrevRow != null, "previous row is null?  fCopyACHContactsPrevRow");
-
-  // copy things over
-  oAccountRow.AttrCol.Primary.cbPrimContact.rawValue =
-    oPrevRow.AttrCol.Primary.cbPrimContact.rawValue;
-  oAccountRow.AttrCol.Primary.info.name.rawValue =
-    oPrevRow.AttrCol.Primary.info.name.rawValue;
-  oAccountRow.AttrCol.Primary.info.email.rawValue =
-    oPrevRow.AttrCol.Primary.info.email.rawValue;
-  oAccountRow.AttrCol.Primary.info.phone.rawValue =
-    oPrevRow.AttrCol.Primary.info.phone.rawValue;
-  oAccountRow.AttrCol.Primary.info.fax.rawValue =
-    oPrevRow.AttrCol.Primary.info.fax.rawValue;
-
-  oAccountRow.AttrCol.Alternate.cbAltContact.rawValue =
-    oPrevRow.AttrCol.Alternate.cbAltContact.rawValue;
-  oAccountRow.AttrCol.Alternate.info.name.rawValue =
-    oPrevRow.AttrCol.Alternate.info.name.rawValue;
-  oAccountRow.AttrCol.Alternate.info.email.rawValue =
-    oPrevRow.AttrCol.Alternate.info.email.rawValue;
-  oAccountRow.AttrCol.Alternate.info.phone.rawValue =
-    oPrevRow.AttrCol.Alternate.info.phone.rawValue;
-  oAccountRow.AttrCol.Alternate.info.fax.rawValue =
-    oPrevRow.AttrCol.Alternate.info.fax.rawValue;
-
-  fShowContactACHAccount(oAccountRow, true);
-}
-
-function fShowContactACHAccount(oAccountRow, bTab2) {
-  //    var oAction = oAccountRow.Action.takeAction;
-  //    assert(oAction != null, "fShowContactACHAccount - oAction was null ");
-
-  var iRow = oAccountRow.index;
-
-  // Show Primary contact when checked or always on first row
-  fDisplay(
-    oAccountRow.AttrCol.Primary.info,
-    oAccountRow.AttrCol.Primary.cbPrimContact.rawValue == 1
-  );
-  fDisplay(
-    oAccountRow.AttrCol.Alternate.info,
-    oAccountRow.AttrCol.Alternate.cbAltContact.rawValue == 1
-  );
-
-  // Show button tab 2, not tab 3 (or first row)
-  fHideShow(oAccountRow.AttrCol.sfCopy, iRow != 0 && bTab2);
-}
-
-function fSetACHInputMethod(oSFRb) {
-  var oRb = oSFRb.rbs;
-  var osfCCQ = oSFRb.sf;
-  assert(oRb != null, "fSetACHInputMethod - oRb was null ");
-  assert(osfCCQ != null, "fSetACHInputMethod - osfCCQ was null ");
-
-  var iRb = oRb.rawValue;
-  var bSet = iRb == 2 || iRb == 3;
-
-  fHideShow(osfCCQ, bSet);
-}
-
-function fShowACHAccount(oAccountRow) {
-  var oAction = oAccountRow.Action.takeAction;
-  assert(oAction != null, "fShowACHAccount - oAction was null ");
-
-  var bModify = oAction.rawValue == 1;
-
-  var oPDSoverPAP = oAccountRow.Account.ModifyStuff.format1.type;
-  var oPrefunded = oAccountRow.Account.ModifyStuff.sfPF;
-  var oLimits = oAccountRow.Account.ModifyStuff.sfLimits;
-  var oLimitNote = oAccountRow.Account.ModifyStuff.sfLimitNote;
-  var oPDSNote = oAccountRow.AttrCol.Control.sfPDSNote;
-  var oBillingOptions =
-    oAccountRow.AttrCol.Control.sfcbBillingOptions.sfRB.type;
-  var oBasicNote = oAccountRow.AttrCol.Control.sfBasicNote;
-  var osfInputMethod = oAccountRow.AttrCol.Control.sfInput.sfRB;
-  assert(oPDSoverPAP != null, "fShowACHAccount - oPDSoverPAP was null ");
-  assert(oPrefunded != null, "fShowACHAccount - oPrefunded was null ");
-  assert(oLimits != null, "fShowACHAccount - oLimits was null ");
-  assert(osfInputMethod != null, "fShowACHAccount - osfInputMethod was null ");
-
-  // Delete only
-  fDisplay(oAccountRow.Account.ModifyStuff, bModify);
-  fDisplay(oAccountRow.AttrCol.Control, bModify);
-  fDisplay(oAccountRow.AttrCol.DelText, !bModify); // Delete only
-
-  if (!bModify) return;
-
-  fDisplay(oPrefunded, oPDSoverPAP.rawValue == 1); // PDS
-  fDisplay(oPDSNote, oPDSoverPAP.rawValue == 1); // PDS
-  fDisplay(
-    oLimits,
-    oPrefunded.Prefunded.rawValue == 1 ||
-      oPrefunded.Prefunded.rawValue == 2 ||
-      oPDSoverPAP.rawValue == 2
-  ); //Daily Limit, Prefunding, PAP
-  fDisplay(oLimitNote, oPrefunded.Prefunded.rawValue == 1); //Daily Limit
-  fDisplay(oBasicNote, oBillingOptions.rawValue == 1); // Basic (Pay as you go)
-  fDisplay(
-    oAccountRow.AttrCol.Control.sfCurrency,
-    oAccountRow.AttrCol.Control.cbControl.rawValue == 1
-  ); // show currency choice
-  fDisplay(
-    oAccountRow.AttrCol.Control.info,
-    oAccountRow.AttrCol.Control.cbControl.rawValue == 1
-  ); // show transit/acct #'s
-
-  fSetACHInputMethod(osfInputMethod);
-}
-
-// Called to make sure this is appropriately showing
-
-function fShowDeleteAccount(oAccountRow) {
-  var bPrivateBanking = geClientType.rawValue == 3;
-
-  var oAcctType = oAccountRow.Account.one.sfAcctType.sfAT.AcctType;
-  var oBDArb = oAccountRow.Account.one.sfAcctType.sfAT.AcctType.BDA;
-  var oNISStype = oAccountRow.Account.one.sfAcctType.sfAT.AcctType.NISS;
-  var oRBIStype = oAccountRow.Account.one.sfAcctType.sfAT.AcctType.RBIS;
-  var oAcctOwn = oAccountRow.Account.one.sfAcctType.sfOwnership;
-  var oAcctOwnType = oAccountRow.Account.one.sfAcctType.sfOwnership.rbOwnership;
-  assert(oAcctType != null, "fShowDeleteAccount - oAcctType was null ");
-  assert(oBDArb != null, "fShowDeleteAccount - oBDArb was null ");
-  assert(oNISStype != null, "fShowDeleteAccount - oNISStype was null ");
-  assert(oRBIStype != null, "fShowDeleteAccount - oRBIStype was null ");
-  assert(oAcctOwn != null, "fShowDeleteAccount - oAcctOwn was null ");
-  assert(oAcctOwnType != null, "fShowDeleteAccount - oAcctOwnType was null ");
-
-  var oMLEName = oAccountRow.Account.one.sfDetails.MLEName;
-  var oSchedB = oAccountRow.Account.one.sfDetails.cbSchedB;
-  var oSRF = oAccountRow.Account.one.sfDetails.SRF;
-  var oTransit = oAccountRow.Account.one.sfDetails.TransitNo;
-  var oAcctNo = oAccountRow.Account.one.sfDetails.AccountNo;
-  assert(oMLEName != null, "fShowDeleteAccount - oMLEName was null ");
-  assert(oSchedB != null, "fShowDeleteAccount - oSchedB was null ");
-  assert(oSRF != null, "fShowDeleteAccount - oSRF was null ");
-  assert(oTransit != null, "fShowDeleteAccount - oTransit was null ");
-  assert(oTransit != null, "fShowDeleteAccount - oTransit was null ");
-
-  var oCCMsg = oAccountRow.Account.one.CCMessage;
-  var oRBServices = oAccountRow.Account.two.sfServices.rbSvcType;
-  var oAllServices = oAccountRow.Account.two.sfAllServices;
-  var oDelAllmsg = oAccountRow.Account.two.delServices.delAll;
-  var oDelCoremsg = oAccountRow.Account.two.delServices.delCore;
-  var oSecTwo = oAccountRow.Account.two;
-  var oACMMsg = oAccountRow.Account.delACHmsg;
-  assert(oCCMsg != null, "fShowDeleteAccount - oCCMsg was null ");
-  assert(oRBServices != null, "fShowDeleteAccount - oRBServices was null ");
-  assert(oAllServices != null, "fShowDeleteAccount - oAllServices was null ");
-  assert(oDelAllmsg != null, "fShowDeleteAccount - oDelAllmsg was null ");
-  assert(oDelCoremsg != null, "fShowDeleteAccount - oDelCoremsg was null ");
-  assert(oACMMsg != null, "fShowDeleteAccount - oACMMsg was null ");
-
-  fQkDisplay(oTransit, true); // majority
-
-  fHide(oCCMsg);
-  fDisplay(oRBServices, false);
-  fHideServices(oAllServices);
-  fHide(oDelAllmsg);
-  fHide(oDelCoremsg);
-  fDisplay(oSecTwo, true);
-  fHide(oACMMsg);
-  fHideShow(oNISStype, bPrivateBanking);
-  fHideShow(oRBIStype, bPrivateBanking);
-  //fDisplay(oSecTwo,!bPrivateBanking);
-  fDisplay(oSecTwo, true); // Services for PB  190505
-
-  oBDArb.caption.value.resolveNode("#text").value = bPrivateBanking
-    ? "BDA / PDA"
-    : "BDA";
-
-  // Ownership types
-  var iAcctType = oAcctType.rawValue;
-  switch (iAcctType) {
-    case "1":
-    case "2":
-    case "3":
-    case "4":
-    case "5":
-      fDisplay(oAcctOwn, true);
-      break;
-    default:
-      fDisplay(oAcctOwn, false);
-      break;
-  }
-  var iOwnerType = oAcctOwnType.rawValue;
-  fQkDisplay(oMLEName, iOwnerType == 2); // Truly required?
-  fQkDisplay(oSchedB, iOwnerType == 2); // Truly required?
-  fQkDisplay(oSRF, iOwnerType == 2 || iOwnerType == 3);
-
-  // Now, based on Account type
-  switch (iAcctType) {
-    case "1": // BDA - Transit 5,Acct 7
-      fDisplay(oRBServices, true);
-      fHideShow(oDelAllmsg, oRBServices.rawValue == 1);
-      fHideShow(oDelCoremsg, oRBServices.rawValue == 2);
-      if (oRBServices.rawValue == 1) {
-        fResetAService(oAllServices, 7); // Statements
-        fResetAService(oAllServices, 9); // Account Imaging
-      } else if (oRBServices.rawValue == 2) {
-        fResetAService(oAllServices, 7); // Statements
-        fResetAService(oAllServices, 9); // Account Imaging
-      } else {
-        fResetServices(oAllServices); // all showing
-      }
-      break;
-    case "2": // OLBB - Transit 5,Acct 10 - changed to 11,130618
-      fResetAService(oAllServices, 0); // Balance Reporting,on
-      fResetAService(oAllServices, 1); // Account Transfers,off
-      break;
-    case "3": // OLMS - Transit 5,Acct 10 - changed to 11,130618
-      fResetAService(oAllServices, 0); // Balance Reporting,on
-      break;
-    case "4": // GIC - Transit blank,Acct digits/non-blank
-      fDisplay(oTransit, false);
-      fResetAService(oAllServices, 0); // Balance Reporting,on
-      break;
-    case "5": // Credit Card - Transit blank,Acct 16
-      fDisplay(oTransit, false);
-      fResetAService(oAllServices, 0); // Balance Reporting,on
-      fResetAService(oAllServices, 1); // Account Transfers,off
-      fResetAService(oAllServices, 7); // statements,off
-      fShow(oCCMsg);
-      break;
-    case "6": // NISS (Money Market) - Transit blank,Acct 10
-      fDisplay(oSecTwo, false); // no Services  190505
-      fDisplay(oTransit, false);
-      break;
-    case "7": // RBIS (RRSP,RESP,TFSA,RRIF,Mutual Fund) - Transit blank,Acct 10 --- TBD
-      fDisplay(oSecTwo, false); // no Services  190505
-      fDisplay(oTransit, false);
-      break;
-    case "8": // ACH - not there anymore...
-      fDisplay(oSecTwo, false); // no Services  190505
-      fDisplay(oTransit, false);
-      fDisplay(oSecTwo, false);
-      fShow(oACMMsg);
-      break;
-  }
-}
-
-function fRightDeleteAccounts(oTbl) {
-  var vRows = fGetAllTableRows(oTbls.somExpression);
-  for (var i = 0; i < vRows.length; i++) {
-    // loop through rows
-    var oRadioB = vRows.item(i).Action.takeAction;
-    iAdds += oRadioB.rawValue == 1 ? 1 : 0;
-  }
-}
-
-// returns validation if no showing checkboxes are selected
-function fValidateAtLeastOneService(oCb) {
-  var oSf = oCb.parent.parent;
-  if (!fShowing(oSf)) return true;
-  var vList = xfa.resolveNodes(oSf.somExpression + ".sfSvc[*]");
-  assert(vList.length > 0, "fValidateAtLeastOneService - wrong list of stuff");
-  for (var i = 0; i < vList.length; i++) {
-    // loop through rows
-    var ocbSF = vList.item(i);
-    if (fShowing(ocbSF)) {
-      var oCB = ocbSF.cb;
-      if (oCB.rawValue == 1) {
-        // showing and 'on' - then at least one is selected
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-// EDI Direct
-function fEDIPayRcvrSet() {
-  var ePayRcvrSvc = oEDIPaymentReceiver.sfSvcSelect.ddl.rawValue;
-
-  fDisplay(oEDIPaymentReceiver.sfRcvLinkOptions, false);
-  fDisplay(oEDIPaymentReceiver.sfRcvDirectOptions, false);
-  fDisplay(oEDIPaymentReceiver.sfInfoDirectOptions, false);
-  fDisplay(oEDIPaymentReceiver.sfEDIRcvrOptions, false);
-  fDisplay(oEDIPaymentReceiver.sfCustomOptions, false);
-
-  switch (ePayRcvrSvc) {
-    case "1": // Receivables Link
-      fDisplay(oEDIPaymentReceiver.sfRcvLinkOptions, true);
-      break;
-    case "2": // Receivables Direct
-      fDisplay(oEDIPaymentReceiver.sfRcvDirectOptions, true);
-      break;
-    case "3": // Information Direct
-      fDisplay(oEDIPaymentReceiver.sfInfoDirectOptions, true);
-      break;
-    case "4": // EDI Payment Receiver (Incl. R*EDI* Mail / R*EDI* Fax Services)
-      fDisplay(oEDIPaymentReceiver.sfEDIRcvrOptions, true);
-      break;
-    case "5": // Customization (Please contact Sales Support)
-      fDisplay(oEDIPaymentReceiver.sfCustomOptions, true);
-      break;
-    default:
-      // ???
-      fLog("fEDIPayRcvrSet - bad value " + ePayRcvrSvc);
-      break;
-  }
-}
-
-// CEPAS
-function fCEPASSet() {
-  var eCEPASSvc = oCEPAS.sfSvcSelect.ddl.rawValue;
-
-  fDisplay(oCEPAS.sfBAI, false);
-  fDisplay(oCEPAS.sfCAMT, false);
-  fDisplay(oCEPAS.sfSWIFT, false);
-  fDisplay(oCEPAS.sf821, false);
-  fDisplay(oCEPAS.sfGlobal, false);
-  fDisplay(oCEPAS.sfAPLink, false);
-
-  switch (eCEPASSvc) {
-    case "1":
-      fDisplay(oCEPAS.sfBAI, true);
-      break;
-    case "2":
-      fDisplay(oCEPAS.sfCAMT, true);
-      break;
-    case "3":
-      fDisplay(oCEPAS.sfSWIFT, true);
-      break;
-    case "4":
-      fDisplay(oCEPAS.sf821, true);
-      break;
-    case "5":
-      fDisplay(oCEPAS.sfGlobal, true);
-      break;
-    case "6":
-      fDisplay(oCEPAS.sfAPLink, true);
-      break;
-    default:
-      // ???
-      fLog("fCEPASSet - bad value " + eCEPASSvc);
-      break;
-  }
-  fBaltranTest();
-}
-
-// RBC Express site is required field if BALTRAN (version 3)
-function fBaltranTest() {
-  var eCEPASSvc = oCEPAS.sfSvcSelect.ddl.rawValue;
-  var bV3 = false;
-
-  switch (eCEPASSvc) {
-    case "1":
-      bV3 |= oCEPAS.sfBAI.ApplyAll.rawValue == 3;
-      bV3 |= oCEPAS.sfBAI.cbCD.rawValue == 1;
-      break;
-    case "2":
-      bV3 |= oCEPAS.sfCAMT.cb052.rawValue == 1;
-      bV3 |= oCEPAS.sfCAMT.cb053.rawValue == 1;
-      bV3 |= oCEPAS.sfCAMT.cb054.rawValue == 1;
-      break;
-    case "3":
-      bV3 |= oCEPAS.sfSWIFT.sfFinSwift.cb940.rawValue == 1;
-      bV3 |= oCEPAS.sfSWIFT.sfFinSwift.cb942.rawValue == 1;
-      break;
-    case "4":
-      bV3 |= oCEPAS.sf821.sfSvcSelB.ApplyAll.rawValue == 3;
-      break;
-    case "5":
-      break;
-    case "6":
-      break;
-    default:
-      // ???
-      fLog("fBaltranTest - bad value " + eCEPASSvc);
-      break;
-  }
-  fSetNullTestTo(oCEPAS.sfCompanyGeneral.tbRBCxSite, !bV3);
-}
-
-// EDI Originator
-function fEDIPayOrigSet() {
-  var ePayOrigSvc = oEDIPaymentOriginator.sfSvcSelect.ddl.rawValue;
-
-  fDisplay(oEDIPaymentOriginator.sfAPOptions, false);
-  fDisplay(oEDIPaymentOriginator.sfPDEDIOptions, false);
-  fDisplay(oEDIPaymentOriginator.sfPDXMLOptions, false);
-  fDisplay(oEDIPaymentOriginator.sfMoreXML, false);
-  fDisplay(oEDIPaymentOriginator.sfFirst3, false);
-  fDisplay(oEDIPaymentOriginator.sfBillPayRSvc, false);
-  fDisplay(oEDIPaymentOriginator.sfAttachments, true);
-  fDisplay(oEDIPaymentOriginator.sfTradePayments, false);
-
-  var vRows = fGetAllTableRows(
-    oEDIPaymentOriginator.sfAccounts.sfAccountsTable.tbl.somExpression
-  );
-  for (var i = 0; i < vRows.length; i++) {
-    // loop through rows
-    fDisplay(vRows.item(i).sfServiceColumn.sfGSAN, false);
-  }
-
-  var bSeeGSAN = false;
-  var bFEDI = false;
-  var bFEDIreadonly = false;
-
-  switch (ePayOrigSvc) {
-    case "1": // AP Link
-      for (var i = 0; i < vRows.length; i++) {
-        // loop through rows
-        b = vRows.item(i).sfServiceColumn.sfMainServices.cbPAP.rawValue == 1;
-        b |= vRows.item(i).sfServiceColumn.sfMainServices.cbPDS.rawValue == 1;
-        fDisplay(vRows.item(i).sfServiceColumn.sfGSAN, b);
-      }
-
-      bFEDI = oEDIPaymentOriginator.sfAPOptions.sfTop.cbFEDI.rawValue == "1";
-
-      fDisplay(
-        oEDIPaymentOriginator.sfAPOptions.sfTop.ddProcCtr,
-        oEDIPaymentOriginator.sfAPOptions.sfTop.cbACHDDPDS.rawValue == 1 ||
-          oEDIPaymentOriginator.sfAPOptions.sfTop.cbACHDPPAP.rawValue == 1
-      );
-      fDisplay(
-        oEDIPaymentOriginator.sfAPOptions.sfTop.sfNotes.sfACHAck,
-        oEDIPaymentOriginator.sfAPOptions.sfTop.cbACHDDPDS.rawValue == 1 ||
-          oEDIPaymentOriginator.sfAPOptions.sfTop.cbACHDPPAP.rawValue == 1
-      );
-
-      fDisplay(oEDIPaymentOriginator.sfAPOptions, true);
-      fDisplay(oEDIPaymentOriginator.sfFirst3, true);
-      break;
-    case "2": // PD - EDI
-      for (var i = 0; i < vRows.length; i++) {
-        // loop through rows
-        b = vRows.item(i).sfServiceColumn.sfMainServices.cbPAP.rawValue == 1;
-        b |= vRows.item(i).sfServiceColumn.sfMainServices.cbPDS.rawValue == 1;
-        fDisplay(vRows.item(i).sfServiceColumn.sfGSAN, b);
-      }
-
-      bFEDI = oEDIPaymentOriginator.sfPDEDIOptions.sfTop.cbFEDI.rawValue == "1";
-
-      fDisplay(oEDIPaymentOriginator.sfPDEDIOptions.sfTop.sfFirst, bFEDI);
-
-      fDisplay(
-        oEDIPaymentOriginator.sfPDEDIOptions.sfTop.ddProcCtr,
-        oEDIPaymentOriginator.sfPDEDIOptions.sfTop.cbACHDDPDS.rawValue == 1 ||
-          oEDIPaymentOriginator.sfPDEDIOptions.sfTop.cbACHDPPAP.rawValue == 1
-      );
-      fDisplay(
-        oEDIPaymentOriginator.sfPDEDIOptions.sfTop.sfACHAck,
-        oEDIPaymentOriginator.sfPDEDIOptions.sfTop.cbACHDDPDS.rawValue == 1 ||
-          oEDIPaymentOriginator.sfPDEDIOptions.sfTop.cbACHDPPAP.rawValue == 1
-      );
-
-      fDisplay(oEDIPaymentOriginator.sfPDEDIOptions, true);
-      fDisplay(oEDIPaymentOriginator.sfFirst3, true);
-      break;
-    case "3": // PD - XML
-      for (var i = 0; i < vRows.length; i++) {
-        // loop through rows
-        b = vRows.item(i).sfServiceColumn.sfMainServices.cbPAP.rawValue == 1;
-        b |= vRows.item(i).sfServiceColumn.sfMainServices.cbPDS.rawValue == 1;
-        fDisplay(vRows.item(i).sfServiceColumn.sfGSAN, b);
-      }
-
-      bFEDI = oEDIPaymentOriginator.sfPDXMLOptions.sfTop.cbFEDI.rawValue == "1";
-      fDisplay(oEDIPaymentOriginator.sfPDXMLOptions.sfTop.sfFirst, bFEDI);
-      fDisplay(
-        oEDIPaymentOriginator.sfPDXMLOptions.sfTop.ddProcCtr,
-        oEDIPaymentOriginator.sfPDXMLOptions.sfTop.cbACHDDPDS.rawValue == 1 ||
-          oEDIPaymentOriginator.sfPDXMLOptions.sfTop.cbACHDPPAP.rawValue == 1
-      );
-      fDisplay(
-        oEDIPaymentOriginator.sfPDXMLOptions.sfTop.sfACHAck,
-        oEDIPaymentOriginator.sfPDXMLOptions.sfTop.cbACHDDPDS.rawValue == 1 ||
-          oEDIPaymentOriginator.sfPDXMLOptions.sfTop.cbACHDPPAP.rawValue == 1
-      );
-      fDisplay(oEDIPaymentOriginator.sfPDXMLOptions, true);
-      fDisplay(oEDIPaymentOriginator.sfFirst3, true);
-      fDisplay(oEDIPaymentOriginator.sfMoreXML, true);
-
-      break;
-    case "4": // SEDAR
-      bFEDI = true;
-      bSeeGSAN = false;
-      bFEDIreadonly = true;
-
-      fDisplay(oEDIPaymentOriginator.sfTradePayments, true);
-
-      break;
-    case "5": // Bill payment remittance service
-      for (var i = 0; i < vRows.length; i++) {
-        // loop through rows
-        b = vRows.item(i).sfServiceColumn.sfMainServices.cbPAP.rawValue == 1;
-        b |= vRows.item(i).sfServiceColumn.sfMainServices.cbPDS.rawValue == 1;
-        fDisplay(vRows.item(i).sfServiceColumn.sfGSAN, b);
-      }
-
-      fDisplay(oEDIPaymentOriginator.sfBillPayRSvc, true);
-      break;
-    case "6": // EDI Payment Originator
-      bFEDI = true;
-      bSeeGSAN = false;
-      bFEDIreadonly = true;
-
-      fDisplay(oEDIPaymentOriginator.sfTradePayments, true);
-
-      break;
-    default:
-      fLog("fEDIPayOrigSet - bad value " + ePayOrigSvc);
-      bSeeGSAN = false;
-      break;
-  }
-
-  fDisplay(oEDIPaymentOriginator.sfTransRisk, bFEDI);
-
-  fDisplay(oEDIPaymentOriginator.sfAccounts, true);
-  fDisplay(oEDIPaymentOriginator.sfComments, true);
-
-  for (var i = 0; i < vRows.length; i++) {
-    // loop through rows
-    fDisplay(vRows.item(i).sfServiceColumn.sfOtherServices, bFEDIreadonly);
-    fDisplay(vRows.item(i).sfServiceColumn.sfMainServices, !bFEDIreadonly);
-  }
-}
-
-//Payee Match Accounts Table
-
-function fPMAccountsChange(choice, oRow) {
-  fLog("fPMAccountsChange " + choice);
-
-  if (choice == 1) {
-    fDisplay(oRow.sfAcct.sfChequeIssuance, true);
-    fHide(oRow.sfAcct.sfLast.rbDefaultDecision.NoChange);
-
-    // Code to make some fields required
-    fSetNullTestTo(oRow.sfAcct.sfFirst.TransitNo, false); // make required
-    fSetNullTestTo(oRow.sfAcct.sfFirst.AccountNo, false);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.AccountName, false);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.AccountShortName, false);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.CustomerID, false);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.ProcessingCentre, false);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.rbVerify, false);
-    fSetNullTestTo(oRow.sfAcct.sfEMailOne.EMailOne, false);
-    fSetNullTestTo(oRow.sfAcct.sfLast.rbNullNotification, false);
-    fSetNullTestTo(oRow.sfAcct.sfLast.rbDefaultDecision, false);
-    fSetNullTestTo(oRow.sfAcct.sfEndAccts.rbChequesMonth, false);
-    fSetNullTestTo(oRow.sfAcct.sfChequeIssuance.rbChequeIssuance, false);
-    fSetNullTestTo(oRow.sfAcct.sfSerial.Serial, false);
-
-    splitOutBigString(stringify(vaFldTest)); // and save for next time
-  } else {
-    fDisplay(oRow.sfAcct.sfChequeIssuance, false);
-    fShow(oRow.sfAcct.sfLast.rbDefaultDecision.NoChange);
-
-    fSetNullTestTo(oRow.sfAcct.sfFirst.TransitNo, true); // make not required
-    fSetNullTestTo(oRow.sfAcct.sfFirst.AccountNo, true);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.AccountName, true);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.AccountShortName, true);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.CustomerID, true);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.ProcessingCentre, true);
-    fSetNullTestTo(oRow.sfAcct.sfFirst.rbVerify, true);
-    fSetNullTestTo(oRow.sfAcct.sfEMailOne.EMailOne, true);
-    fSetNullTestTo(oRow.sfAcct.sfLast.rbNullNotification, true);
-    fSetNullTestTo(oRow.sfAcct.sfLast.rbDefaultDecision, true);
-    fSetNullTestTo(oRow.sfAcct.sfEndAccts.rbChequesMonth, true);
-    fSetNullTestTo(oRow.sfAcct.sfChequeIssuance.rbChequeIssuance, true);
-    fSetNullTestTo(oRow.sfAcct.sfSerial.Serial, true);
-
-    splitOutBigString(stringify(vaFldTest)); // and save for next time
-  }
-}
-
-//Payee Match Admin Table
-
-function fPMAdminsChange(choice, oRow) {
-  fLog("fPMAdminsChange " + choice);
-  if (choice == 1) {
-    // Code to make some fields required
-    fSetNullTestTo(oRow.sfAdmin.TableContent.AdminUserName, false); // make required
-    fSetNullTestTo(oRow.sfAdmin.TableContent.FirstName, false);
-    fSetNullTestTo(oRow.sfAdmin.TableContent.LastName, false);
-    fSetNullTestTo(oRow.sfAdmin.TableContent.Phone, false);
-    fSetNullTestTo(oRow.sfAdmin.TableContent.EMail, false);
-    fSetNullTestTo(oRow.sfAdmin.TableContent.rbLanguage, false);
-
-    splitOutBigString(stringify(vaFldTest)); // and save for next time
-  } else {
-    fSetNullTestTo(oRow.sfAdmin.TableContent.AdminUserName, true); // make not required
-    fSetNullTestTo(oRow.sfAdmin.TableContent.FirstName, true);
-    fSetNullTestTo(oRow.sfAdmin.TableContent.LastName, true);
-    fSetNullTestTo(oRow.sfAdmin.TableContent.Phone, true);
-    fSetNullTestTo(oRow.sfAdmin.TableContent.EMail, true);
-    fSetNullTestTo(oRow.sfAdmin.TableContent.rbLanguage, true);
-
-    splitOutBigString(stringify(vaFldTest)); // and save for next time
-  }
-}
-
-function fbDDLMT101(oDD) {
-  var oDD1 = oDD.parent.ddMsgType1;
-  var oDD2 = oDD.parent.ddMsgType2;
-  var oDD3 = oDD.parent.ddMsgType3;
-  var oDD4 = oDD.parent.ddMsgType4;
-  var oDD5 = oDD.parent.ddMsgType5;
-
-  assert(oDD1 != null, "fShowSWIFTMsgTypes - oDD1 not found");
-  assert(oDD2 != null, "fShowSWIFTMsgTypes - oDD2 not found");
-  assert(oDD3 != null, "fShowSWIFTMsgTypes - oDD3 not found");
-  assert(oDD4 != null, "fShowSWIFTMsgTypes - oDD4 not found");
-  assert(oDD5 != null, "fShowSWIFTMsgTypes - oDD5 not found");
-
-  var b1MT101 = fIsMT101(oDD1);
-  var b2MT101 = fIsMT101(oDD2);
-  var b3MT101 = fIsMT101(oDD3);
-  var b4MT101 = fIsMT101(oDD4);
-  var b5MT101 = fIsMT101(oDD5);
-
-  return b1MT101 || b2MT101 || b3MT101 || b4MT101 || b5MT101;
-}
-
-function fbDDLMTxxx(oDD) {
-  var oDD1 = oDD.parent.ddMsgType1;
-  var oDD2 = oDD.parent.ddMsgType2;
-  var oDD3 = oDD.parent.ddMsgType3;
-  var oDD4 = oDD.parent.ddMsgType4;
-  var oDD5 = oDD.parent.ddMsgType5;
-
-  assert(oDD1 != null, "fShowSWIFTMsgTypes - oDD1 not found");
-  assert(oDD2 != null, "fShowSWIFTMsgTypes - oDD2 not found");
-  assert(oDD3 != null, "fShowSWIFTMsgTypes - oDD3 not found");
-  assert(oDD4 != null, "fShowSWIFTMsgTypes - oDD4 not found");
-  assert(oDD5 != null, "fShowSWIFTMsgTypes - oDD5 not found");
-
-  var b1MTxxx = fIsMTxxx(oDD1);
-  var b2MTxxx = fIsMTxxx(oDD2);
-  var b3MTxxx = fIsMTxxx(oDD3);
-  var b4MTxxx = fIsMTxxx(oDD4);
-  var b5MTxxx = fIsMTxxx(oDD5);
-
-  return b1MTxxx || b2MTxxx || b3MTxxx || b4MTxxx || b5MTxxx;
-}
-
-// SWIFT //
-function fShowSWIFTMsgTypes(oDD) {
-  assert(
-    oDD != null,
-    "fShowSWIFTMsgTypes - now needs to be called with any of the dropdowns as an argument"
-  );
-
-  // 171221 - removed showing anything if MT101 - as used to on enrolment form - now we've got an entire form for Send MT101
-  var osfOtherMT = oDD.parent.parent.sfOtherMT;
-  assert(osfOtherMT != null, "fShowSWIFTMsgTypes - sfOtherMT not found");
-
-  var bSelMtxxx = fbDDLMTxxx(oDD);
-  fDisplay(osfOtherMT, bSelMtxxx);
-}
-
-function fIsMT101(o) {
-  if (fFldStringEmpty(o)) return false;
-  return o.rawValue == "MT101";
-}
-function fIsMTxxx(o) {
-  if (fFldStringEmpty(o)) return false;
-  return !fIsMT101(o);
-}
 
 // Called from a remove button to figure if this item has more than one instance
 function fMoreThanOne(oTableObj) {
@@ -1882,24 +393,6 @@ function fMoreThan(oTableObj, iMax) {
   return false;
 }
 
-function fClickKLinkFeedback() {
-  if (bEN) {
-    app.launchURL(
-      "http://rbcnet.fg.acme.com/cashmanagement/cid-83318.html",
-      true
-    );
-  } else {
-    app.launchURL(
-      "http://rbcnet.fg.acme.com/cashmanagement_fr/cid-83608.html",
-      true
-    );
-  }
-}
-
-function fShowHideCountry(rb) {
-  fDisplay(rb.parent.OtherCountry, rb.rawValue == 3);
-}
-
 /*************************/
 /***** eMail Routing *****/
 /*************************/
@@ -1917,16 +410,11 @@ function fShowHideCountry(rb) {
 function fHideAllForms() {
   fLog("fHideAllForms");
   for (i = 0; i < vaServices.length; i++) {
-    var aServiceArea = vaServices[i];
-    var vRows = aServiceArea["rows"];
-    for (j = 0; j < vRows.length; j++) {
-      var aRow = vRows[j];
-      var oForm = aRow["form"];
-      fHide(oForm);
-    }
+    var dService = vaServices[i];
+    var oForm = dService["form"];
+    fHide(oForm);
   }
 }
-
 
 /****************************/
 /****** EMail Handling ******/
@@ -1935,14 +423,6 @@ function fHideAllForms() {
 function fDoMultiEMail(cDoc) {
   fLog("fDoMultiEMail");
   fDescribeavEmailForms();
-
-  // Special case for ACH Direct approval workflow
-  var bUserCanApprove = oACHDepositICanApprove.rawValue == 1;
-  var bSwitchACHEmails = !bUserCanApprove;
-  var aApproverEmail = fTrim(oACHDepositApproverEmail.rawValue);
-  if (bSwitchACHEmails) {
-    //fLog("switching from PDS email to "+aApproverEmail);
-  }
 
   var iEMails = countEmailsToSend();
 
@@ -1969,7 +449,6 @@ function fDoMultiEMail(cDoc) {
     // Show only appropriate forms
 
     fHideAllForms();
-    fHideAllCommonSubSections(); // As parts pertain only to that routing email
 
     var aFormList = "";
     var vaForms = avEmailForms[aEmail];
@@ -1988,8 +467,6 @@ function fDoMultiEMail(cDoc) {
       dctSeenForms[aName] = "seen";
     }
 
-    fShowCommonSubSections(aEmail); // Show what's inside of each commons for this routing
-
     if (aFormList.length > 2)
       aFormList = aFormList.substring(0, aFormList.length - 1);
 
@@ -2003,114 +480,11 @@ function fDoMultiEMail(cDoc) {
       "/" +
       geClientName.rawValue;
     var aBody = msgBody;
-
-    if (aEmail == aToPDS) {
-      // changes
-      fLog("checking to " + aToPDS);
-      var aType =
-        oACHDepositType.rawValue == 1
-          ? msgACHTypePrefunding
-          : msgACHTypeTemporary;
-      if (bUserCanApprove) {
-        // user can approve
-        fLog("ACH DD - user can approve");
-        aSubject =
-          msgApproved +
-          aType +
-          " - " +
-          geClientSRF.rawValue +
-          "/" +
-          geClientName.rawValue;
-      } else {
-        // requires approval
-        fLog("ACH DD - need additional approver");
-        aEmail = aEmail.replace(aToPDS, aApproverEmail);
-
-        aSubject =
-          msgSubjectAppRequest +
-          aType +
-          " - " +
-          geClientSRF.rawValue +
-          "/" +
-          geClientName.rawValue;
-        aBody = msgBodyAppRequest;
-
-        fLog("ACH Switching - replacement email to: " + aEmail);
-
-        fDisplay(oACHDepositApproverSection, true);
-        fFormMakeReadWrite(oACHDepositApproverSection);
-      }
-    }
-
-    var bToCCHost = false;
-    if (aEmail == aToCC) {
-      fLog("checking to " + aToCC);
-      var bModify = oCC.sfActions.rbActions.rawValue == 1;
-
-      var bCheckDigit = oCCFirst.sfCheckDigit.sfCB.cb.rawValue == 1;
-      var bCheckDigitAdd =
-        oCCFirst.sfCheckDigit.sfWhenChecked.sfCDRQ.rb.rawValue == 1;
-      var bToCCHost = bModify && bCheckDigit && bCheckDigitAdd;
-
-      aSubject =
-        msgSubjectCCRequest +
-        "/" +
-        geClientSRF.rawValue +
-        "/" +
-        geClientName.rawValue;
-
-      if (bToCCHost) {
-        fLog("adding on email " + aToCCTHost);
-        aEmail += ";" + aToCCTHost;
-      }
-    }
-
-    // Should we send to Corpore ECom ???
-    var bToCECom = false;
-    if (aEmail == aToCC) {
-      fLog("checking (second time) to " + aToCC);
-
-      var bModify = oCC.sfActions.rbActions.rawValue == 1;
-      var bDelete = oCC.sfActions.rbActions.rawValue == 2;
-
-      var bDeleteCC = oCC.sfDeleteProfile.sfTop.rbConcentrator.rawValue == 1;
-      fLog("bDeleteCC - " + bDeleteCC);
-      bDeleteCC = bDeleteCC && bDelete;
-
-      var bACCCsf = oCCFirst.sfAcctChange.sfCB.cb.rawValue == 1;
-      var bACCC =
-        oCCFirst.sfAcctChange.sfWhenChecked.rbConcentrator.rawValue == 1;
-      bACCC = bACCCsf && bACCC && bModify;
-
-      var bCIPRCI = oCCFirst.sfCPRDCI.sfCB.cb.rawValue == 1;
-      bCIPRCI = bCIPRCI && bModify;
-
-      var bCILBsf = oCCFirst.sfLeadBank.sfCB.cb.rawValue == 1;
-      var bCILB =
-        oCCFirst.sfLeadBank.sfWhenChecked.rbConcentrator.rawValue == 1;
-      bCILB = bCILBsf && bCILB && bModify;
-
-      bToCECom = bDeleteCC || bACCC || bCIPRCI || bCILB;
-
-      aSubject =
-        msgSubjectCCRequest +
-        "/" +
-        geClientSRF.rawValue +
-        "/" +
-        geClientName.rawValue;
-
-      if (bToCECom) {
-        fLog("adding on email " + aToCorpECom);
-        aEmail += ";" + aToCorpECom;
-      }
-    }
-
     var aUrl = "mailto:" + aEmail + "?subject=" + aSubject + "&body=" + aBody;
 
     fLog("pre diac: " + aUrl);
     aUrl = removeDiacritics(aUrl);
     fLog("EMAIL to " + aUrl);
-    //Removed comment out for debugging 170922
 
     cDoc.submitForm({
       // mailForm fails security test for some reason...
@@ -2119,24 +493,11 @@ function fDoMultiEMail(cDoc) {
       cCharSet: "utf-8",
     });
 
-    if (bSwitchACHEmails) {
-      fDisplay(oACHDepositApproverSection, false);
-    }
-
     fLog("back from email call");
   }
 
   // reset to showing all forms selected in tab 3 - but don't show requester or processor instructions
-  //    fHide(oTab3ProcInstructions);
-
-  fShowAllCommons();
-  fShow(oCancelServicesTxtHeader); // text 'Services'
-
   fSetClientSegment(false);
-
-  /* This is for case where we don't want user to be able to do anything other than save
-    fHide(oTab3ProcInstructions);
-    */
 
   // This is case where user can do whatever they want...
   fLog("Allowing user to edit and resend if interested...");
@@ -2145,44 +506,8 @@ function fDoMultiEMail(cDoc) {
   fShow(oTab3ReqInstructions);
   fHide(oTab3ProcInstructions);
 
-  // Sandwich read-only
   fLog("fDoMultiEMail - DONE");
 }
-
-function fDoACHDirectEmail(cDoc, bApproved) {
-  var oForm = fGetField("Sect_ACHDirect", aTab2Forms);
-  fFormMakeReadOnly(oForm);
-
-  var aEmail = bApproved ? aToPDS : ""; // if not approved, user must enter email
-  var aCC = bApproved ? "" : "cc=" + aToPDS;
-  var aAppDec = bApproved ? msgApproved : msgDeclined;
-  var aBody = bApproved ? msgACHApprovedBody : msgACHDeclinedBody;
-  var aType =
-    oACHDepositType.rawValue == 1 ? msgACHTypePrefunding : msgACHTypeTemporary;
-
-  var aSubject =
-    aAppDec +
-    aType +
-    " - " +
-    geClientSRF.rawValue +
-    "/" +
-    geClientName.rawValue;
-  var aUrl =
-    "mailto:" + aEmail + "?" + aCC + "&subject=" + aSubject + "&body=" + aBody;
-
-  fLog("EMAIL " + bApproved + " to " + aUrl);
-  //Removed comment out for debugging 170922
-
-  cDoc.submitForm({
-    // mailForm fails security test for some reason...
-    cURL: encodeURI(aUrl), // side effect is that the form is saved,i.e.,preSave is called - resetting all validations
-    cSubmitAs: "PDF",
-    cCharSet: "utf-8",
-  });
-
-  fLog("back from email call");
-}
-
 
 function bEmailinList(aEmail, vEmails) {
   for (var i = 0; i < vEmails.length; i++) {
@@ -2219,26 +544,6 @@ function countEmailsToSend() {
 function addEmailForm(aEmail, formName, formObject) {
   aEmail = aEmail.toLowerCase(); // shouldn't be needed, but...
 
-  // Special case1 - if form is 'EDI Payment Originator' it normally goes to corpecom@acme.com,
-  // 1 - however if 'Bill Payment Remittance' is selected, then route to EDI Operations
-  // 2 - if ' Payables Direct - XML' is selected, also add email to PSHOperations
-  if (
-    aEmail == "corpecom@acme.com" &&
-    formName == "E-Commerce - Payment Originator"
-  ) {
-    var ePayOrigSvc = oEDIPaymentOriginator.sfSvcSelect.ddl.rawValue;
-    if (ePayOrigSvc == 5) {
-      // Bill Payment Remittance
-      aEmail = "edioperations@acme.com";
-      fLog("Special case substitution in effect");
-    }
-    if (ePayOrigSvc == 3) {
-      // Payables Direct - XML
-      aEmail += "; " + aToPHSOps;
-      fLog("Special case addition of PSHOperations in effect");
-    }
-  }
-
   if (aEmail == "n/a") {
     fLog("addEmailForm - ROUTING ERROR - see N/A.   +" + formName);
     fLog("addEmailForm - formName=" + formName);
@@ -2251,72 +556,21 @@ function addEmailForm(aEmail, formName, formObject) {
   avEmailForms[aEmail].push(aForm);
 }
 
-function fSetClientSegmentTab1() {
-  var iSegment = getRawElse(geClientType, 0) - 1;
-  // Check each section / row of services
-  for (i = 0; i < vaServices.length; i++) {
-    var aServiceArea = vaServices[i];
-    var vRows = aServiceArea["rows"];
-
-    oTbl = aServiceArea.tbl;
-    var vTblRows = fGetAllTableRows(oTbl.somExpression);
-
-    var iCount = 0; // see if anything is in this section
-    for (j = 0; j < vRows.length; j++) {
-      var aRow = vRows[j];
-      var vSegments = aRow.segments;
-      var bOn = iSegment < 0 ? false : vSegments[iSegment] == 1; // if not selected nothing should show
-      if (bOn) iCount++;
-
-      var oTblRow = vTblRows.item(j);
-      assert(oTblRow != null, "fSetClientSegment NULL: " + i + "/" + j);
-      fHideShow(oTblRow, bOn);
-    }
-    fHideShow(aServiceArea.twistie, iCount > 0);
-  }
-}
 // -Sets the right tab1 display
 // -Shows the right forms for tab2/tab3, including commons subsections
 // -Collects routing information for active forms
 // -bTab2 - if going to tab 2 then we need to ensure things are fully setup
 // returns true if any tab1 services are selected
 function fSetClientSegment(bTab2) {
-  //    fResetCommonArea();         // Turns off everything showing on tab 2 in the commons area
-  var iSegment = getRawElse(geClientType, 0) - 1; // 0=CFS, 1=GBSC, 2=Private Banking
   var bAny = false; // figure out if anything is checked, return that
-  bCommonRBCx = false; // any RBCx seen?   always seen in phase 1
-
-  // Check each section / row of services
   for (i = 0; i < vaServices.length; i++) {
-    // by section, then by rows in section
-    var aServiceArea = vaServices[i];
-    var vRows = aServiceArea["rows"];
-    oTbl = aServiceArea.tbl;
-    var vTblRows = fGetAllTableRows(oTbl.somExpression);
-
-    for (j = 0; j < vRows.length; j++) {
-      // running rows in table structure - same as rows in vaServices
-      var aRow = vRows[j];
-      var oTblRow = vTblRows.item(j);
-      assert(oTblRow != null, "fSetClientSegment NULL: " + i + "/" + j);
-      var bOn = fShowing(oTblRow); // Some don't show, depending on client segment - previously hidden (fSetClientSegmentTab1)
-      var bChecked = bOn && aRow.static != 1 && oTblRow.sf.cb.rawValue == "1";
-      bAny |= bChecked;
-
-      fQkDisplay(aRow.form, bChecked); // shows/hides form in tab 2/3...
-
-      // Finally, make r/w or r/o - and capture email routing
-      if (bChecked) {
-        if (i > 0) {
-          // will do this to common sections later...
-          if (bTab2) fFormMakeReadWrite(aRow.form);
-          else fFormMakeReadOnly(aRow.form);
-        }
-      } // bChecked
-    } // loop on j
-  } // loop on i
-
-  fHideShowRBCxSitesSection(bTab2);
+    var dService = vaServices[i];
+    var oForm = dService["form"];
+    var ocb = dService["cb"]; // checkboxes
+    var bOn = ocb.rawValue == 1;
+    fQkDisplay(oForm, bOn);
+    bAny |= bOn;
+  }
 
   return bAny; // any check boxes checked?
 }
@@ -2325,185 +579,19 @@ function fSetClientSegment(bTab2) {
 // Key: unique email address(es)
 // Value: array of forms to be sent there
 function fBuildEMailRouting() {
-  var iSegment = fGetClientType();
   avEmailForms = {}; // reset global variable.    for some reason we setup all email addresses now...
 
-  // 1. Product - note the only 'Special' at this point is SWIFT-Receive MT
-  // 2. Common Address/ Cancel
-  // 3. Common Contact level routing
   for (i = 0; i < vaServices.length; i++) {
-    // by section, then by rows in section
-    var aServiceArea = vaServices[i];
-    var vRows = aServiceArea.rows;
-    oTbl = aServiceArea.tbl;
-    var vTblRows = fGetAllTableRows(oTbl.somExpression);
-
-    for (j = 0; j < vRows.length; j++) {
-      // running rows in table structure - same as rows in vaServices
-      var aRow = vRows[j];
-      var oTblRow = vTblRows.item(j);
-      assert(oTblRow != null, "fSetClientSegment NULL: " + i + "/" + j);
-      var bOn = fShowing(oTblRow); // Some don't show, depending on client segment - previously hidden (fSetClientSegmentTab1)
-      var bChecked = bOn && aRow.static != 1 && fBool(oTblRow.sf.cb);
-      if (bChecked) {
-        switch (i) {
-          case 0: // Common section
-            for (var k = 0; k < vaCommonSvcs.length; k++) {
-              // loop through each of the possible services...
-              var aSvc = vaCommonSvcs[k];
-              var oCB, vRouting, aEMail;
-              switch (j) {
-                case 0: // Common Address
-                  oCB = oCommonCB(kaCommonAddressForm, k);
-                  vRouting = aSvc.routing;
-                  aEmail = vRouting[iSegment];
-                  break;
-                case 1: // Common Contact
-                  oCB = oCommonCB(kaCommonContactForm, k);
-                  vRouting = aSvc.contactRouting; // Different routing table than other two
-                  aEmail = vRouting[iSegment];
-                  break;
-                case 2: // Common Cancel
-                  oCB = oCommonCB(kaCommonCancelForm, k);
-                  vRouting = aSvc.routing;
-                  aEmail = vRouting[iSegment];
-                  break;
-              }
-              if (fBool(oCB)) {
-                var aFormName =
-                  (bEN ? aRow.name : aRow.frname) + " (" + aSvc.name + ")"; // Address Change (Account Images)
-                addEmailForm(aEmail, aFormName, aRow.form); // specific name, but shared common contact form
-              }
-            }
-            break;
-          case 3: // Payment Products
-            if (j == 8) {
-              // Receive MT101 and Other Services
-              /* Update 171221
-                                Receive MT101 (Does Not Have BIC): Will go to CSFI
-                                Receive MT101 (Have BIC): Will go to DMC
-                             */
-              fLog("Special Case SWIFT");
-              var oForm = aRow.form;
-              oForm = oForm.Content; // added a layer 11/14/17
-
-              var oBIC = oForm.sfTreeTop.rbHaveBIC;
-              assert(oBIC != null, "fSpecialCaseSWIFT - need BIC rb");
-              var bHasBIC = fBool(oBIC);
-              fLog("bHasBIC:" + bHasBIC);
-              if (bHasBIC)
-                addEmailForm(
-                  aToBESSData,
-                  bEN ? aRow.name : aRow.frname,
-                  aRow.form
-                );
-              else
-                addEmailForm(aToCSFI, bEN ? aRow.name : aRow.frname, aRow.form);
-              break;
-            } // else falls through to default
-
-          default:
-            // Products
-            var vRouting = aRow.routing;
-            if (typeof vRouting == "undefined") {
-              fLog("undefined here - aRow=" + aRow);
-            }
-            aEmail = vRouting[iSegment];
-            addEmailForm(aEmail, bEN ? aRow.name : aRow.frname, aRow.form);
-            break;
-        }
-      }
-    }
-  }
-}
-
-function fHideShowRBCxSitesSection(bTab2) {
-  var bActive = false;
-  var oFrmAddr = oCommonForm(kaCommonAddressForm);
-  if (fShowing(oFrmAddr))
-    bActive |= oCommonCB(kaCommonAddressForm, 0).rawValue == "1";
-
-  var oFrmCntt = oCommonForm(kaCommonContactForm);
-  if (fShowing(oFrmCntt))
-    bActive |= oCommonCB(kaCommonContactForm, 0).rawValue == "1";
-
-  var oFrmCncl = oCommonForm(kaCommonCancelForm);
-  if (fShowing(oFrmCncl))
-    bActive |= oCommonCB(kaCommonCancelForm, 0).rawValue == "1";
-
-  // Now check if any of the other RBCx forms are selected
-  oRBCx = vaServices[1];
-  vRows = oRBCx.rows;
-  for (i = 0; i < vRows.length; i++) {
-    oSect = vRows[i];
-    oForm = oSect.form;
-    bActive |= fShowing(oForm);
-    if (bActive) break;
-  }
-
-  fDisplay(oTab2RBCx, bActive && bTab2);
-  fDisplay(oTab3RBCx, bActive && !bTab2);
-}
-
-function fFinallyShowInsideCommons(bTab2) {
-  // Call things appropriately if commons active and RBCx checked
-  if (fShowing(oCommSectAddress))
-    // && ( oCommonCB(kaCommonAddressForm,0).rawValue == '1'
-    fAddressInfoShows(bTab2);
-  if (fShowing(oCommmSectContact))
-    // && ( oCommonCB(kaCommonContactForm,0).rawValue == '1' )
-    fContactInfoShows(bTab2);
-  if (fShowing(oCommmSectCancel))
-    // && ( oCommonCB(kaCommonCancelForm,0).rawValue == '1' )
-    fCancelInfoShows(bTab2);
-}
-
-function fInitServiceDescription() {
-  // validate table is properly constructed,i.e.,no empty keys
-  for (i = 0; i < vaServices.length; i++) {
-    var aServiceArea = vaServices[i];
-    assert(
-      "name" in aServiceArea,
-      "missing key name in service " + aServiceArea
-    );
-    var aSvcName = aServiceArea["name"];
-    assert("tbl" in aServiceArea, "missing key tbl in service " + aSvcName);
-    assert(
-      "twistie" in aServiceArea,
-      "missing key twistie in service " + aSvcName
-    );
-    assert("rows" in aServiceArea, "missing key rows in service " + aSvcName);
-
-    var vRows = aServiceArea["rows"];
-    for (j = 0; j < vRows.length; j++) {
-      var aRow = vRows[j];
-      assert("name" in aRow, "missing key segments in service " + aSvcName);
-      var aRowName = aRow["name"];
-      assert("segments" in aRow, "missing key segments in service " + aRowName);
-      assert("static" in aRow, "missing key static in service " + aRowName);
-      assert("form" in aRow, "missing key form in service " + aRowName);
-      assert(aRow["form"] != null, "form is null in service " + aRowName);
-    }
-  }
-
-  // Fill in the cb field for each row,i.e.,get the checkbox object
-  for (i = 0; i < vaServices.length; i++) {
-    var aServiceArea = vaServices[i];
-    var vRows = aServiceArea["rows"];
-    oTbl = aServiceArea["tbl"];
-    var aSOM = oTbl.somExpression;
-    for (j = 0; j < vRows.length; j++) {
-      var aRow = vRows[j];
-      bStatic = aRow["static"] == 1;
-      if (!bStatic) {
-        aSOMCB = aSOM + ".Row[" + j + "].sf.cb";
-        var oCB = resolveNode(aSOMCB);
-        assert(
-          oCB != null,
-          "missing cb in service " + aRow["name"] + " at " + aSOMCB
-        );
-        aRow["cb"] = oCB;
-      }
+    var dService = vaServices[i];
+    var oForm = dService["form"];
+    var aFormName = dService["product"];
+    var aEmail = dService["email"];
+    var ocb = dService["cb"]; // checkbox
+    var bOn = ocb.rawValue == 1;
+    //fLog("found email form - " + aEmail + " - " + aFormName + " - "+ bOn);
+    if (bOn) {
+      fLog("found email to add - " + aEmail + " - " + aFormName);
+      addEmailForm(aEmail, aFormName, oForm);
     }
   }
 }
@@ -2535,7 +623,6 @@ function fTabSwitchSetInfo(iToTab) {
     }
 
     // other business logic for tabs 2 or 3
-
   }
 
   if (bTab3) {
@@ -2566,10 +653,11 @@ function fClickToTab(iTab) {
   fClickaTab(oTabButton);
 }
 
-function fCopyGlobalsT1T3() {   // Copy global fields
-  fStartReadingGlobals();       // clears out global area
-  fReadGlobals(oTab1Fields);    // read tab one
-  fWriteGlobals(oTab2Forms);    // write to tab 2/3
+function fCopyGlobalsT1T3() {
+  // Copy global fields
+  fStartReadingGlobals(); // clears out global area
+  fReadGlobals(oTab1Fields); // read tab one
+  fWriteGlobals(oTab2Forms); // write to tab 2/3
 }
 
 function fPrepTab3() {
@@ -2617,37 +705,17 @@ function fGetAllTableRows(aTableSOM) {
   return vList;
 }
 
-// WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-function fixTable(oTable) {   // Accessibility
-  fLog("fixTable removed - "+oTable.somExpression);
-  return;
-
-  var oRows = fGetAllTableRows(oTable.somExpression);
-  for (var i = 0; i < oRows.length; i++) {
-    // loop through rows
-    var oButton = oRows.item(i).btnRemove;
-    oButton.assist.toolTip.value = msgRemoveRow + (i + 1);
-  }
-
-  if (oRows.length > 1) {
-    fLog("calling fMakeNewRowValidate");
-    fMakeNewRowValidate(oRows.item(0), oRows.item(oRows.length - 1));
-    //fLog("back from fMakeNewRowValidate");
-  }
-}
-// WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-
-
 // Adding a row to a table:
 // - add the row - not there is confusion as to this screwing the base variable up?
 // - fix table for accessibility - assumes consistent naming of 'Remove' button
 // - add all new fields on the new row to the validation table
 function fAddARow(oTable) {
-  aTableSOM = oTable.somExpression;   // addInstance can screw things up... ???
+  aTableSOM = oTable.somExpression; // addInstance can screw things up... ???
   oTable.Row.instanceManager.addInstance();
 
   var oRows = fGetAllTableRows(aTableSOM);
-  for (var i = 0; i < oRows.length; i++) {  // loop through rows
+  for (var i = 0; i < oRows.length; i++) {
+    // loop through rows
     var oButton = oRows.item(i).btnRemove;
     oButton.assist.toolTip.value = msgRemoveRow + (i + 1);
   }
@@ -2785,7 +853,6 @@ function Date2Num(adt, fmt) {
   oDate = new Date(iYr, iMn - 1, iDt);
   return oDate;
 }
-
 
 function add_business_days(days) {
   // https://www.sitepoint.com/community/t/add-days-to-date-while-ignoring-weekends-and-holidays-possible/3827
@@ -3036,7 +1103,6 @@ function fNumLessThan(o, amt) {
   // Decimal type - always number
   return Number(o.rawValue) <= amt;
 }
-
 
 /***** Removal of Diacritical characters from a string - required for url...  *****/
 var defaultDiacriticsRemovalMap = [
@@ -3298,12 +1364,12 @@ function removeDiacritics(str) {
   });
 }
 
-
 /*****************************/
 /***** Display/Show/Hide *****/
 /*****************************/
 
-function fDisplay(o, bShow) {     //  Call to show/hide an object, including enable/disabling it
+function fDisplay(o, bShow) {
+  //  Call to show/hide an object, including enable/disabling it
   if (bShow) {
     fShow(o);
     fEnableFieldsRecursively(o);

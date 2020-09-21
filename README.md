@@ -100,6 +100,6 @@ Long story short, a reasonable amount of effort went into building a framework t
 
 ##### git hints
 
-git add -A
-git commit -a -m "new stuff"
-git push
+- git add -A
+- git commit -a -m "new stuff"
+- git push

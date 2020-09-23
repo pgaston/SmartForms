@@ -101,7 +101,7 @@ Long story short, a reasonable amount of effort went into building a framework t
 
 The following image illustrates the steps involved in developing and deploying a SmartForms app. 
 
-![SmartForm Develop/Deploy Workflow](/images/workflow.png)
+![SmartForm Develop/Deploy Workflow](/images/workflowDiagram.png)
 
 Key steps:
 - Develop.   The AEM Forms tool is used to iteratively edit the pdf document.

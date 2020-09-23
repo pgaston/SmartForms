@@ -2,6 +2,9 @@
 # SmartForms
 ### An innovative way to use PDF files to deliver applications - rich UI, business logic, workflow, and RPA - simply built and universally delivered.
 
+- Zero deployment cost to a desktop
+- Application functionality - attractive UI, business logic, workflow
+
 # Examples
 
 Applications/common use cases include: (that have been created for large corporations)
@@ -11,7 +14,7 @@ Applications/common use cases include: (that have been created for large corpora
 - Legal document creation and workflow
 - Customer onboarding
 - 'Know Your Customer' processing and workflow
-- Complicated product enrollment or maintenance
+- Lead sharing in a multi-product/segment world
 - Periodic reviews of mandated procedures
 - and more...
 
@@ -52,7 +55,8 @@ An Adobe pdf file allows javascript code to be integrated and manipulate the doc
 
 To start, you need the following tools:
 
-- Adobe Experience Manager - Forms. Version 6.4.0. (Used to be called Livecycle Designer.)
+- Adobe Experience Manager - Forms. Version 6.4.0 is currently used. (Used to be called Livecycle Designer.)
+- Adobe Acrobat - for testing.    (No specific version specified.)
 - Excel - for RPA data dictionary.
 
 Essentially the pdf editor is wysiwyg for the graphical layout and allows code to be attached to events, like validate, change, etc.   Pretty simple.    However, as complexity grows - as it has here, the Javascript tends to be kept in a separate area - you'll see it at the end of the form named cLookFeel.   
@@ -92,6 +96,26 @@ Take the case where the user needs to fill in an international address.    In th
 The problem, at least with Adobe pdf is that if you hide a field, it will still validate.   So if, say the country selected was US, it would still try and validate the postal code field for Canada.    This is bad.
 
 Long story short, a reasonable amount of effort went into building a framework that can selectively hide a field and also disable it's validation, **and** also, when re-shown have the original validation rules.
+
+# Lastly, the full picture on Developing and Deploying
+
+The following image illustrates the steps involved in developing and deploying a SmartForms app. 
+
+![SmartForm Develop/Deploy Workflow](/images/workflow.png)
+
+Key steps:
+- Develop.   The AEM Forms tool is used to iteratively edit the pdf document.
+- Debug.   Use Adobe Acrobat to test the form.   There is a console available to view console.println output (press ctrl-J to bring up the window).    Note that the debugger that appears is pretty much unusable here.    Also note that AEM forms has a preview mode that is usable in some cases for small forms for testing.
+- 'Bless'.  In order to deploy the app for actual use it must have extended rights enabled.   Save As / Reader Extended PDF / Enable Additional Features...
+- User Test.  The normal Adobe Reader is used.    Note that many 3rd party 'knock-offs' don't fully implement the functionality required to run SmartForms.
+- Deploy.   A common deployment of the SmartForm is linking to the file for download from an intranet.
+- Usage.   Again, the standard Adobe Reader is used.
+*For RPA*
+- Data Dictionary.   A python script is included (parseOut.ipynb) that will create a data dictionary of the SmartForm.   This is used as input to the RPA tool.
+- RPA integration.    This is your RPA tool.   You're on your own on using the Data Dictionary and your RPA logic.
+- Field Extraction to RPA.  Depending on your RPA tool, you may often need to add in your own parser of the SmartForm.   An example is given (outlookpython27.py) that illustrates how to parse out the field information desired from the SmartForm.
+
+
 
 # Give it a whirl!
 
